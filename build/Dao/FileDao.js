@@ -57,6 +57,7 @@ class FileDao extends BaseDao_1.BaseDao {
             this.db.query(`INSERT INTO icon(url,blocksOfWidth,blocksOfHeight,width,height,totalFrames,createAt,category) 
     VALUES(?,?,?,?,?,?,now(),?)`, [url, blocksOfWidth, blocksOfHeight, width, height, totalFrames, categoryCd], (err, result) => {
                 if (err) {
+                    console.log("error", err);
                     reject(err);
                 }
                 else

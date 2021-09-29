@@ -62,6 +62,7 @@ return new Promise((resolve, reject) => {
     VALUES(?,?,?,?,?,?,now(),?)`,[url,blocksOfWidth,blocksOfHeight,width,height,totalFrames,categoryCd],
     (err,result)=>{
         if(err){
+          console.log("error",err);          
             reject(err)
         }
         else
