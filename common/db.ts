@@ -3,8 +3,9 @@ import mysql from "mysql";
 import {HOST_NAME} from "./constants";
 var connection=mysql.createConnection({
   host:"171.241.47.113",
+  // host:"localhost",
   user: "root",
-  password: "",
+  password: "H1u2y3123",
   database: "chat_app",
   port: 3306,
 }); 

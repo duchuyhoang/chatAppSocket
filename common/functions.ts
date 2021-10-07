@@ -1,9 +1,13 @@
 import path from "path";
-import { NextFunction, Response } from "express";
+import { NextFunction, Response, Express } from "express";
 import { ValidationError } from "yup";
 import { CustomValidationError } from "../models/CustomValidationError";
 import { HttpError } from "../models/HttpError";
 import jwt from "jsonwebtoken";
+import firebase from "../firebase/admin";
+import { storageRef } from "../firebase/app";
+import { uploadBytes, getDownloadURL } from "firebase/storage";
+import {UploadMulterMemoryFile} from "./multer";
 require("dotenv").config();
 
 import { VALIDATION_ERROR, VALIDATION_STATUS } from "../common/constants";
@@ -44,8 +48,8 @@ const throwValidateError = (error: ValidationError, next: NextFunction) => {
   );
 };
 
-const throwNormalError = (message:string,next: NextFunction) => {
-  next(new Error("Unexpected error"));
+const throwNormalError = (message: string, next: NextFunction) => {
+  next(new Error(message||"Unexpected error"));
 };
 
 const throwHttpError = (
@@ -56,20 +60,85 @@ const throwHttpError = (
   next(new HttpError(message, status));
 };
 
-const generateAccessToken = (input:any) => {
-  const tokenExpireTime = Date.now() + parseInt(process.env.TOKEN_EXPIRE_TIME as string);
-  return jwt.sign({ ...input, tokenExpireTime }, process.env.TOKEN_SECRET as string
-      , { algorithm: 'HS256', expiresIn: parseInt(process.env.TOKEN_EXPIRE_TIME as string) / 1000, })
+const generateAccessToken = (input: any) => {
+  const tokenExpireTime =
+    Date.now() + parseInt(process.env.TOKEN_EXPIRE_TIME as string);
+  return jwt.sign(
+    { ...input, tokenExpireTime },
+    process.env.TOKEN_SECRET as string,
+    {
+      algorithm: "HS256",
+      expiresIn: parseInt(process.env.TOKEN_EXPIRE_TIME as string) / 1000,
+    }
+  );
 
   // process.env.TOKEN_EXPIRE_TIME / 1000
+};
+
+const generateRefreshToken = (input: any) => {
+  const refrestTokenExpireTime =
+    Date.now() + parseInt(process.env.REFRESH_TOKEN_EXPIRE_TIME as string);
+  return jwt.sign(
+    { ...input, refrestTokenExpireTime },
+    process.env.REFRESH_TOKEN_SECRET as string,
+    {
+      algorithm: "HS256",
+      expiresIn:
+        parseInt(process.env.REFRESH_TOKEN_EXPIRE_TIME as string) / 1000,
+    }
+  );
+  // process.env.REFRESH_TOKEN_EXPIRE_TIME / 1000
+};
+
+
+
+// function translateToUploadFile(file:Express.Multer.File):UploadMulterMemoryFile{
+
+// return {
+// file,
+// newName:
+// }
+
+
+// }
+
+function toArrayBuffer(buf: Buffer) {
+  var ab = new ArrayBuffer(buf.length);
+  var view = new Uint8Array(ab);
+  for (var i = 0; i < buf.length; ++i) {
+    view[i] = buf[i];
+  }
+  return ab;
+}
+// fileName:string,mimetype:string,buffer:Buffer
+
+async function uploadSingle(uploadedFile:UploadMulterMemoryFile){
+  const unit8Array = toArrayBuffer(uploadedFile.file.buffer);
+  const result = await uploadBytes(storageRef(uploadedFile.newName), unit8Array);
+  const link = await getDownloadURL(storageRef(uploadedFile.newName));
+  return link;
+}
+async function uploadMultipleImage(listFile:UploadMulterMemoryFile[]){
+  const listLink=await Promise.all([listFile.map((file)=>uploadSingle(file))]);
+  return listLink;
 }
 
-const generateRefreshToken = (input:any) => {
-  const refrestTokenExpireTime = Date.now() + parseInt(process.env.REFRESH_TOKEN_EXPIRE_TIME as string);
-  return jwt.sign({ ...input, refrestTokenExpireTime },
-      process.env.REFRESH_TOKEN_SECRET as string,
-      { algorithm: 'HS256', expiresIn: parseInt(process.env.REFRESH_TOKEN_EXPIRE_TIME as string) / 1000 })
-  // process.env.REFRESH_TOKEN_EXPIRE_TIME / 1000
+ const forBulkInsert = <T>(dataList:Array<T>, insertedId:string) => {
+  // imageList will be [[1,2,3],[1,4,5],[1,6,7]]
+  // do this for bulk insert after
+  let multidimensionArrayData: any[][] = [];
+  dataList.forEach((data, _) => {
+      let oneArrayData:any[] = [insertedId];
+      for (let key in data) {
+          oneArrayData.push(data[key])
+      }
+      multidimensionArrayData.push(oneArrayData)
+      // imageList will be [[1,2,3],[1,4,5],[1,6,7]]
+      // do this for bulk insert after 
+  })
+
+return multidimensionArrayData;
+
 }
 
 export {
@@ -80,5 +149,9 @@ export {
   throwHttpError,
   throwNormalError,
   generateAccessToken,
-  generateRefreshToken
+  generateRefreshToken,
+  uploadSingle,
+  uploadMultipleImage,
+  forBulkInsert,
+  // translateToUploadFile
 };

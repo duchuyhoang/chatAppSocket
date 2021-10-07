@@ -19,7 +19,6 @@ class FileDao extends BaseDao_1.BaseDao {
         icon_category.delFlag as categoryDelFlag,
         icon_category.createAt as categoryCreateAt
          FROM icon INNER JOIN icon_category ON icon.category=icon_category.id AND id_icon=? AND icon.delFlag=${constants_1.DEL_FLAG.VALID} AND icon_category.delFlag=${constants_1.DEL_FLAG.VALID} LIMIT 1`, [id], (err, result) => {
-                console.log(err);
                 if (err)
                     reject(err);
                 else {
@@ -57,7 +56,6 @@ class FileDao extends BaseDao_1.BaseDao {
             this.db.query(`INSERT INTO icon(url,blocksOfWidth,blocksOfHeight,width,height,totalFrames,createAt,category) 
     VALUES(?,?,?,?,?,?,now(),?)`, [url, blocksOfWidth, blocksOfHeight, width, height, totalFrames, categoryCd], (err, result) => {
                 if (err) {
-                    console.log("error", err);
                     reject(err);
                 }
                 else

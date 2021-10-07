@@ -16,6 +16,7 @@ import {
   throwValidateError,
   throwNormalError,
   throwHttpError,
+  uploadSingle,
 } from "../common/functions";
 export class FileControler {
   private FileDao: FileDao;
@@ -64,13 +65,14 @@ export class FileControler {
       );
       next();
     } catch (error: any) {
-      const image: any = req?.files;
-      if (req.iconInfo) {
-        const segment = req.iconInfo[0].imgLink.split("/");
-        unlinkSync(`./assets/icon/${segment[segment.length - 1]}`);
-      }
+      // const image: any = req?.files;
+      // if (req.iconInfo) {
+      //   const segment = req.iconInfo[0].imgLink.split("/");
+      //   unlinkSync(`./assets/icon/${segment[segment.length - 1]}`);
+      // }
 
       throwValidateError(error, next);
+      return;
     }
   }
 
@@ -89,23 +91,31 @@ export class FileControler {
       categoryCd,
     } = req.body;
 
-    if (!!req.iconInfo) {
-      try {
-        const result = await this.FileDao.createIcon({
-          url: req.iconInfo[0].imgLink,
-          blocksOfWidth,
-          blocksOfHeight,
-          width,
-          height,
-          totalFrames,
-          categoryCd,
+    try {
+      if (!!req.iconInfo) {
+        const link = await uploadSingle({
+          file:req.iconInfo[0].originalFile,
+          newName: req.iconInfo[0].newName
         });
-        res.status(REQUEST_SUCCESS).json({ message: "Created" });
-      } catch (e) {
-        throwHttpError(DB_ERROR, BAD_REQUEST, next);
+        try {
+          const result = await this.FileDao.createIcon({
+            url: link,
+            blocksOfWidth,
+            blocksOfHeight,
+            width,
+            height,
+            totalFrames,
+            categoryCd,
+          });
+          res.status(REQUEST_SUCCESS).json({ message: "Created" });
+        } catch (e) {
+          throwHttpError(DB_ERROR, BAD_REQUEST, next);
+        }
+      } else {
+        throwNormalError("Image required", next);
       }
-    } else {
-      throwNormalError("Image required", next);
+    } catch (error) {
+      res.json({ error });
     }
   }
 }

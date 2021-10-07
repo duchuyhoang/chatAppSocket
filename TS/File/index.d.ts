@@ -1,8 +1,11 @@
-import { Request } from "express";
-
+import { Request,Express } from "express";
 interface BaseImage {
+  originalFile:Express.Multer.File;
   imgId: string;
   imgLink: string;
+  newName:string;
+  mimetype:string;
+  buffer: Buffer;
 }
 
 export interface ImageInfo extends  BaseImage{}
