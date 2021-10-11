@@ -6,8 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mysql_1 = __importDefault(require("mysql"));
 var connection = mysql_1.default.createConnection({
     host: "171.241.47.113",
+    // host:"localhost",
     user: "root",
-    password: "",
+    password: "huyhoang10032000@gmail.com",
     database: "chat_app",
     port: 3306,
 });

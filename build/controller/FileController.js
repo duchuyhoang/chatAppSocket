@@ -13,7 +13,6 @@ exports.FileControler = void 0;
 const constants_1 = require("../common/constants");
 const FileDao_1 = require("../Dao/FileDao");
 const File_1 = require("../validations/File");
-const fs_1 = require("fs");
 const functions_1 = require("../common/functions");
 class FileControler {
     constructor() {
@@ -50,37 +49,47 @@ class FileControler {
                 next();
             }
             catch (error) {
-                const image = req === null || req === void 0 ? void 0 : req.files;
-                if (req.iconInfo) {
-                    const segment = req.iconInfo[0].imgLink.split("/");
-                    (0, fs_1.unlinkSync)(`./assets/icon/${segment[segment.length - 1]}`);
-                }
+                // const image: any = req?.files;
+                // if (req.iconInfo) {
+                //   const segment = req.iconInfo[0].imgLink.split("/");
+                //   unlinkSync(`./assets/icon/${segment[segment.length - 1]}`);
+                // }
                 (0, functions_1.throwValidateError)(error, next);
+                return;
             }
         });
     }
     insertIcon(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             const { url, blocksOfWidth, blocksOfHeight, width, height, totalFrames, categoryCd, } = req.body;
-            if (!!req.iconInfo) {
-                try {
-                    const result = yield this.FileDao.createIcon({
-                        url: req.iconInfo[0].imgLink,
-                        blocksOfWidth,
-                        blocksOfHeight,
-                        width,
-                        height,
-                        totalFrames,
-                        categoryCd,
+            try {
+                if (!!req.iconInfo) {
+                    const link = yield (0, functions_1.uploadSingle)({
+                        file: req.iconInfo[0].originalFile,
+                        newName: req.iconInfo[0].newName
                     });
-                    res.status(constants_1.REQUEST_SUCCESS).json({ message: "Created" });
+                    try {
+                        const result = yield this.FileDao.createIcon({
+                            url: link,
+                            blocksOfWidth,
+                            blocksOfHeight,
+                            width,
+                            height,
+                            totalFrames,
+                            categoryCd,
+                        });
+                        res.status(constants_1.REQUEST_SUCCESS).json({ message: "Created" });
+                    }
+                    catch (e) {
+                        (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
+                    }
                 }
-                catch (e) {
-                    (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
+                else {
+                    (0, functions_1.throwNormalError)("Image required", next);
                 }
             }
-            else {
-                (0, functions_1.throwNormalError)("Image required", next);
+            catch (error) {
+                res.json({ error });
             }
         });
     }
