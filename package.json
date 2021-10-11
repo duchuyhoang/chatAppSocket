@@ -30,6 +30,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon build/app.js",
+    "dev":"nodemon app.ts",
     "build_log":"heroku logs -t -a chat-app-socket-cn11"
   },
   "author": "",
