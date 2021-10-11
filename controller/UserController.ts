@@ -37,18 +37,9 @@ export class UserController {
     if (req.app.get(SOCKET_LIST)) {
       // const socketList = req.app.get(SOCKET_LIST);
       // const namespace: Namespace = req.app.get(SOCKET_LIST)["/USER"];
-      const namespace2: Namespace = socketList["/CONVERSATION"];
-      // console.log("nn1", namespace.adapter.rooms);
-
-      // namespace.on("connection",(socket:Socket)=>{
-      console.log("nn", namespace2.adapter.rooms);
-      // console.log("soc",socket.data.decode);
-
-      // });
-
-      // namespace.on("connect",(socket.))
+      const namespace2: Namespace = socketList["/NOTIFICATION"];
+      // console.log("nn", namespace2.adapter.rooms);
     } else {
-      console.log("đa");
     }
     const { email = null, phone = null } = req.query;
     try {

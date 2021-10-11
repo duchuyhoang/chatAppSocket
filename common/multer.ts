@@ -104,5 +104,6 @@ export const handleUploadFile= (
   
     // Pass img info forr the next middleware
     res.locals.imageInfo=iconInfo.length === 0 ? null : iconInfo;
+    
     next();
   };

@@ -11,4 +11,9 @@ export interface Notification{
    createAt:Maybe<String>
 }
 
-
+export interface ISendNotification{
+   id_owner:number,
+   type: typeof NOTIFICATION_TYPE[keyof typeof NOTIFICATION_TYPE],
+   createAt:string,
+   data:any
+}

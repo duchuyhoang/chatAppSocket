@@ -1,7 +1,7 @@
 import {Socket} from "socket.io"
 
 
-export const resetRoom=(socket:Socket,oldRoom:string,newRoom:string)=>{
-socket.leave(oldRoom);
-socket.join(newRoom);
+export const  resetRoom=async (socket:Socket,oldRoom:string,newRoom:string)=>{
+await socket.leave(oldRoom);
+await socket.join(newRoom);
 }

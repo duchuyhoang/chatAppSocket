@@ -30,7 +30,7 @@ export const UserSocket = (namespace: Namespace) => {
     );
 
     socket.on("disconnect", () => {
-      console.log("diss");
+     socket.removeAllListeners();
       //   socket.disconnect();
     });
 

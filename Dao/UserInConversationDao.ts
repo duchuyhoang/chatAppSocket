@@ -6,10 +6,23 @@ import {
 } from "../common/constants";
 import { Conversation } from "../models/Conversation";
 import { BaseDao } from "./BaseDao";
-
+import { UserInConversation } from "../models/UserInConversation";
 export class UserInConversationDao extends BaseDao {
   constructor() {
     super();
+  }
+
+  getConversationByUser(id_user: string, id_room: string) {
+    return new Promise<UserInConversation[]>((resolve, reject) => {
+      this.db.query(
+        `SELECT * FROM user_in_conversation WHERE id_user=? and id_room=? AND status=${USER_IN_ROOM_STATUS.NORMAL}`,
+        [id_user, id_room],
+        (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        }
+      );
+    });
   }
 
   checkPrivateConversationExist(id_user: string, id_friend: string) {
@@ -68,5 +81,16 @@ export class UserInConversationDao extends BaseDao {
     });
   }
 
- 
+  getAllConversationUser(id_room: string) {
+    return new Promise<UserInConversation[]>((resolve, reject) => {
+      this.db.query(
+        `SELECT * FROM user_in_conversation WHERE id_room=? AND status=${USER_IN_ROOM_STATUS.NORMAL}`,
+        [id_room],
+        (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        }
+      );
+    });
+  }
 }

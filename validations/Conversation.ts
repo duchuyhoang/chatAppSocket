@@ -24,3 +24,4 @@ export const ConversationCreatePrivateChatSchema=yup.object().shape({
 export const ConversationCheckPrivateChatExistSchema=yup.object().shape({
   id_friend:yup.string().required("Must include a friend")
 })
+// expot const ConversationGetMessageSchema

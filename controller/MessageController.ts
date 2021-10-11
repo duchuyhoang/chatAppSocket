@@ -1,33 +1,454 @@
-import { NextFunction,Response,Request } from "express";
-import {MessageDao} from "../Dao/MessageDao";
+import { NextFunction, Response, Request } from "express";
+import { MessageDao } from "../Dao/MessageDao";
+import { generateMessage, IQueryMessage, Message } from "../models/Message";
 import { SendMessageSchema } from "../validations/Message";
-import {uploadMultipleImage} from "../common/functions";
-export class MessageController{
-private messageDao:MessageDao;
+import {
+  throwHttpError,
+  uploadMultipleImage,
+  uploadSingle,
+  forBulkInsert,
+  formatDate,
+} from "../common/functions";
+import { IconInfo } from "../TS/File";
+import {
+  NOTIFICATION_TYPE,
+  SOCKET_LIST,
+  SOCKET_NAMESPACE,
+  SOCKET_PREFIX,
+  UNAUTHORIZED,
+  MESSAGE_TYPE,
+  SOCKET_EMIT_ACTIONS,
+  USER_IN_ROOM_STATUS,
+  DB_ERROR,
+  BAD_REQUEST,
+  DEL_FLAG,
+} from "../common/constants";
+import { UserInConversation } from "../models/UserInConversation";
+import { UserInConversationDao } from "../Dao/UserInConversationDao";
+import { DecodedUser } from "../models/User";
+import { OkPacket } from "mysql";
+import { Namespace } from "socket.io";
+import { IUserInConversationQuery } from "../models/UserInConversation";
+import { ISendNotification } from "../models/Notification";
+import { NotificationSocketActions } from "../socket/NotificationSocket/actions";
+import { RoomSocketActions } from "../socket/ConversationSocket/actions";
+export class MessageController {
+  private messageDao: MessageDao;
+  private userInConversationDao: UserInConversationDao;
+  constructor() {
+    this.messageDao = new MessageDao();
+    this.userInConversationDao = new UserInConversationDao();
+    this.emitMessage = this.emitMessage.bind(this);
+    this.insertNewMessage = this.insertNewMessage.bind(this);
+    this.getMesssages = this.getMesssages.bind(this);
+  }
 
-constructor(){
-    this.messageDao=new MessageDao();
-    this.insertNewMessage=this.insertNewMessage.bind(this);
-}
+  private emitMessage = (
+    req: Request,
+    listUser: UserInConversation[],
+    userInfo: DecodedUser,
+    id_conversation: string,
+    notificationEmitData: any,
+    messageEmitData: Message | Message[]
+  ) => {
+    const notificationSocket: Namespace =
+      req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.NOTIFICATION];
+    const conversationSocket: Namespace =
+      req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.CONVERSATION];
 
+    // Emit notification for each user in room
+    listUser.forEach((user) => {
+      if (
+        user.status === USER_IN_ROOM_STATUS.NORMAL &&
+        user.id_user.toString() !== userInfo.id_user.toString()
+      ) {
+        NotificationSocketActions.emitNotification(
+          notificationSocket,
+          SOCKET_PREFIX.NOTIFICATION + user.id_user,
+          {
+            type: NOTIFICATION_TYPE.NEW_MESSAGE,
+            id_owner: userInfo.id_user,
+            data: {
+              ...notificationEmitData,
+              // messageType: MESSAGE_TYPE.TEXT,
+              // content,
+            },
+            createAt: new Date().toISOString(),
+          }
+        );
+      }
+    });
+    // Message emit
+    RoomSocketActions.emitMessageToConversation(
+      conversationSocket,
+      id_conversation,
+      {
+        id_owner: userInfo.id_user.toString(),
+        messageType: MESSAGE_TYPE.TEXT,
+        createAt: new Date().toISOString(),
+        data: messageEmitData,
+      }
+    );
+  };
 
-public async insertNewMessage(req: Request, res: Response,next: NextFunction){
+  public async insertNewMessage(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    const { type, id_conversation = "" } = req.body;
 
-console.log(res.locals.imageInfo);
+    const userInfo: DecodedUser = res.locals.decodeToken;
+    const notificationSocket =
+      req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.NOTIFICATION];
 
+    let listImageLink = null;
+    let imageLink = null;
 
-try{
-// const listLink=await uploadMultipleImage()
+    const listUser: UserInConversation[] =
+      await this.userInConversationDao.getAllConversationUser(
+        // userInfo.id_user.toString(),
+        (id_conversation as string) || ""
+      );
 
-}
-catch(err){
+    switch (type.toString()) {
+      case MESSAGE_TYPE.TEXT.toString():
+        await this.insertTextMessage(req, res, next, listUser);
+        break;
 
-}
+      case MESSAGE_TYPE.IMAGE.toString():
+        await this.insertImageMessage(req, res, next, listUser);
+        break;
 
-res.json({message:"dadad"});
+      case MESSAGE_TYPE.TEXT_AND_IMAGE.toString():
+        await this.insertTextAndMessage(req, res, next, listUser);
+        break;
 
+      default:
+        res.status(BAD_REQUEST).json({ message: "Something wrong!" });
+    }
 
-}
+    // try {
+    //   const listImage: IconInfo[] = res.locals.imageInfo;
+    //   if (listImage) {
+    //     if (listImage.length === 1) {
+    //       imageLink = await uploadSingle({
+    //         file: res.locals.imageInfo[0].originalFile,
+    //         newName: res.locals.imageInfo[0].newName,
+    //       });
+    //     } else {
+    //       listImageLink = await uploadMultipleImage(
+    //         listImage.map((image: IconInfo) => ({
+    //           file: image.originalFile,
+    //           newName: image.newName,
+    //         }))
+    //       );
+    //     }
 
+    //     // else
+    //   }
+    // } catch (err) {}
+  }
 
+  public async insertTextMessage(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+    listUser: UserInConversation[]
+  ) {
+    const { content, id_conversation } = req.body;
+    const userInfo: DecodedUser = res.locals.decodeToken;
+    try {
+      const dbResult: OkPacket = await this.messageDao.insertNewTextMessage({
+        content,
+        id_conversation,
+        id_user: userInfo.id_user.toString(),
+      });
+
+      const message: Message = generateMessage({
+        id_message: dbResult.insertId.toString(),
+        type: MESSAGE_TYPE.TEXT,
+        content: content,
+        id_user: userInfo.id_user.toString(),
+        userInfo,
+        delFlag: DEL_FLAG.VALID,
+        id_conversation,
+        createAt: new Date().toISOString(),
+      });
+
+      this.emitMessage(
+        req,
+        listUser,
+        userInfo,
+        id_conversation,
+        {
+          idMessage: dbResult.insertId,
+          notificationType: NOTIFICATION_TYPE.NEW_MESSAGE,
+          messageType: MESSAGE_TYPE.TEXT,
+          creator: userInfo,
+          default: "New message",
+          data: content,
+        },
+        message
+      );
+
+      res.json({ message: "ok" });
+    } catch (err) {
+      throwHttpError(DB_ERROR, BAD_REQUEST, next);
+    }
+  }
+
+  public async insertImageMessage(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+    listUser: UserInConversation[]
+  ) {
+    let listImageLink: string[] | null = null;
+    let imageLink = null;
+    const imageInsertedId: string[] = [];
+    let data: Message[] = [];
+    const { type, id_conversation = "" } = req.body;
+    const userInfo: DecodedUser = res.locals.decodeToken;
+    try {
+      const listImage: IconInfo[] = res.locals.imageInfo;
+      if (listImage) {
+        if (listImage.length === 1) {
+          imageLink = await uploadSingle({
+            file: res.locals.imageInfo[0].originalFile,
+            newName: res.locals.imageInfo[0].newName,
+          });
+
+          const dbResult: OkPacket =
+            await this.messageDao.insertNewImageMessage({
+              url: imageLink,
+              id_user: userInfo.id_user.toString(),
+              id_conversation,
+            });
+          data.push(
+            generateMessage({
+              id_message: dbResult.insertId.toString(),
+              type: MESSAGE_TYPE.IMAGE,
+              url: imageLink,
+              id_user: userInfo.id_user.toString(),
+              userInfo,
+              delFlag: DEL_FLAG.VALID,
+              id_conversation,
+              createAt: new Date().toISOString(),
+            })
+          );
+        } else if (listImage.length > 1) {
+          listImageLink = await uploadMultipleImage(
+            listImage.map((image: IconInfo) => ({
+              file: image.originalFile,
+              newName: image.newName,
+            }))
+          );
+
+          const insertData = forBulkInsert(
+            listImageLink.map((link: string) => ({
+              id_conversation,
+              type: MESSAGE_TYPE.IMAGE,
+              link,
+              createAt: formatDate(new Date()),
+            })),
+            userInfo.id_user.toString()
+          );
+
+          const dbResult: OkPacket =
+            await this.messageDao.insertMultipleImageMessage(insertData);
+
+          for (let i = 0; i < dbResult.affectedRows; i++) {
+            data.push(
+              generateMessage({
+                id_message: (
+                  parseInt(dbResult.insertId.toString()) + i
+                ).toString(),
+                type: MESSAGE_TYPE.IMAGE,
+                url: listImageLink[i],
+                id_user: userInfo.id_user.toString(),
+                userInfo,
+                delFlag: DEL_FLAG.VALID,
+                id_conversation,
+                createAt: new Date().toISOString(),
+              })
+            );
+          }
+        }
+
+        this.emitMessage(
+          req,
+          listUser,
+          userInfo,
+          id_conversation,
+          {
+            type: MESSAGE_TYPE.IMAGE,
+            notificationType: NOTIFICATION_TYPE.NEW_MESSAGE,
+            creator: userInfo,
+            default: "New image",
+            data,
+          },
+          data
+        );
+        // else
+        res.json({ data });
+      }
+    } catch (err) {
+      throwHttpError(DB_ERROR, BAD_REQUEST, next);
+    }
+  }
+
+  public async insertTextAndMessage(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+    listUser: UserInConversation[]
+  ) {
+    let listImageLink: string[] | null = null;
+    let imageLink = null;
+    let data: Message[] = [];
+    const { type, id_conversation = "", content } = req.body;
+    const userInfo: DecodedUser = res.locals.decodeToken;
+    const listImage: IconInfo[] = res.locals.imageInfo;
+    try {
+      // Message handle
+      const dbMessageResult: OkPacket =
+        await this.messageDao.insertNewTextMessage({
+          content,
+          id_conversation,
+          id_user: userInfo.id_user.toString(),
+        });
+
+      data.push(
+        generateMessage({
+          id_message: dbMessageResult.insertId.toString(),
+          type: MESSAGE_TYPE.TEXT,
+          content: content,
+          id_user: userInfo.id_user.toString(),
+          userInfo,
+          delFlag: DEL_FLAG.VALID,
+          id_conversation,
+          createAt: new Date().toISOString(),
+        })
+      );
+
+      // Image handle
+      if (listImage) {
+        if (listImage.length === 1) {
+          imageLink = await uploadSingle({
+            file: res.locals.imageInfo[0].originalFile,
+            newName: res.locals.imageInfo[0].newName,
+          });
+
+          const dbResult: OkPacket =
+            await this.messageDao.insertNewImageMessage({
+              url: imageLink,
+              id_user: userInfo.id_user.toString(),
+              id_conversation,
+            });
+          data.push(
+            generateMessage({
+              id_message: dbResult.insertId.toString(),
+              type: MESSAGE_TYPE.IMAGE,
+              url: imageLink,
+              createAt: new Date().toISOString(),
+              userInfo,
+              delFlag: DEL_FLAG.VALID,
+              id_conversation,
+              id_user: userInfo.id_user.toString(),
+            })
+          );
+        } else if (listImage.length > 1) {
+          listImageLink = await uploadMultipleImage(
+            listImage.map((image: IconInfo) => ({
+              file: image.originalFile,
+              newName: image.newName,
+            }))
+          );
+
+          const insertData = forBulkInsert(
+            listImageLink.map((link: string) => ({
+              id_conversation,
+              type: MESSAGE_TYPE.IMAGE,
+              link,
+              createAt: formatDate(new Date()),
+            })),
+            userInfo.id_user.toString()
+          );
+
+          const dbResult: OkPacket =
+            await this.messageDao.insertMultipleImageMessage(insertData);
+
+          for (let i = 0; i < dbResult.affectedRows; i++) {
+            data.push(
+              generateMessage({
+                id_message: (
+                  parseInt(dbResult.insertId.toString()) + i
+                ).toString(),
+                type: MESSAGE_TYPE.IMAGE,
+                url: listImageLink[i],
+                createAt: new Date().toISOString(),
+                userInfo,
+                delFlag: DEL_FLAG.VALID,
+                id_conversation,
+                id_user: userInfo.id_user.toString(),
+              })
+            );
+          }
+        }
+
+        this.emitMessage(
+          req,
+          listUser,
+          userInfo,
+          id_conversation,
+          {
+            type: MESSAGE_TYPE.TEXT_AND_IMAGE,
+            notificationType: NOTIFICATION_TYPE.NEW_MESSAGE,
+            creator: userInfo,
+            default: "Text and image",
+            data,
+          },
+          data
+        );
+        // else
+        res.json({ data });
+      }
+    } catch (err) {
+      throwHttpError(DB_ERROR, BAD_REQUEST, next);
+    }
+  }
+
+  public async getMesssages(req: Request, res: Response, next: NextFunction) {
+    const { offset, limit, id_conversation } = req.query;
+    console.log(req.query);
+    
+    const userInfo: DecodedUser = res.locals.decodeToken;
+    let userExist = false;
+    try {
+      const listUser = await this.userInConversationDao.getAllConversationUser(
+        id_conversation?.toString() || ""
+      );
+
+      for (let i = 0; i < listUser.length; i++) {
+        if (listUser[i].id_user.toString() === userInfo.id_user.toString()) {
+          userExist = true;
+          break;
+        }
+      }
+
+      if (!userExist) {
+        res.status(UNAUTHORIZED).json({ message: "Unauthorized" });
+        return;
+      }
+
+      const listMessage: IQueryMessage[] =
+        await this.messageDao.getMessageByConversation(
+          id_conversation?.toString() || ""
+        );
+      res.json({ messages: listMessage });
+    } catch (err) {
+      throwHttpError(DB_ERROR, BAD_REQUEST, next);
+    }
+  }
 }

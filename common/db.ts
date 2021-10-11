@@ -5,7 +5,7 @@ var connection=mysql.createConnection({
   host:"171.241.47.113",
   // host:"localhost",
   user: "root",
-  password: "H1u2y3123",
+  password: "huyhoang10032000@gmail.com",
   database: "chat_app",
   port: 3306,
 }); 

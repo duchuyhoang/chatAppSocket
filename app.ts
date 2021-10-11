@@ -4,7 +4,6 @@ import http, { Server, IncomingHttpHeaders } from "http";
 import uploadRouter from "./router/uploadFileRouter";
 import authenticationRouter from "./router/authenticate";
 import conversationRouter from "./router/conversationRouter";
-
 import userRouter from "./router/userRouter";
 import messageRouter from "./router/messageRouter";
 import multer from "multer";
@@ -15,6 +14,7 @@ import { unlinkSync } from "fs";
 import { HttpError } from "./models/HttpError";
 import { CustomValidationError } from "./models/CustomValidationError";
 import logger from "./common/logger";
+import {getCount} from "./apb";
 import {
   UNAUTHORIZED,
   INTERNAL_SERVER,
@@ -42,6 +42,8 @@ const io = new SocketServer(server, {
     origin: "*",
     methods: ["GET", "POST"],
   },
+  // transports: ['websocket']
+
 });
 // io.engine.on("headers", (headers:IncomingHttpHeaders, req:Request) => {
 //     headers["test"] = "789";
@@ -54,33 +56,43 @@ const io = new SocketServer(server, {
 
 // io.use(socketVerifyToken);
 
-io.on("connection", (socket) => {
-  const socketList = io._nsps.forEach((nsp) => {
-    nsp.on("connect", function (socket) {
-      jwt.verify(
-        (socket.data.decode as string) || "",
-        process.env.TOKEN_SECRET as string,
-        (err: any, decode: any) => {
-          if (err) {
-            nsp.sockets.delete(socket.id);
-          } else {
-            // delete
-          }
-        }
-      );
-    });
-  });
 
-  socket.on("authenticate", (data) => {
+// io.of("/TEST").on("connection",(socket:Socket)=>{
+//   console.log("d",getCount());
+// })
+
+
+
+io.sockets.on("connection", (socket:Socket) => {
+  // const socketList = io._nsps.forEach((nsp) => {
+  //   nsp.on("connect", function (socket) {
+  //     jwt.verify(
+  //       (socket.data.decode as string) || "",
+  //       process.env.TOKEN_SECRET as string,
+  //       (err: any, decode: any) => {
+  //         if (err) {
+  //           // nsp._remove(socket);
+  //           // nsp.sockets.delete(socket.id);
+  //         } else {
+  //           // delete
+  //         }
+  //       }
+  //     );
+  //   });
+  // });
+
+
+  socket.once("authenticate", (data) => {  
     jwt.verify(
       data.token,
       process.env.TOKEN_SECRET as string,
       (err: any, decode: any) => {
         if (err) {
+          console.log(err);
         } else {
           socket.data.decode = decode;
           io._nsps.forEach((nsp) => {
-            nsp.sockets.forEach((_socket) => {
+            nsp.sockets.forEach((_socket) => {           
               if (_socket.id === socket.id) nsp.sockets.set(socket.id, socket);
             });
           });
@@ -90,23 +102,26 @@ io.on("connection", (socket) => {
   });
 
   // if socket didnt authenticate just disconnect it else call another socket with parse info
-  setTimeout(() => {
-    if (socket.data.decode) {
+   setTimeout(() => {
+    if (socket.data.decode) {  
       socket.emit(SOCKET_EMIT_ACTIONS.AUTHEN_SUCCESS);
       const socketList = socketManager(io, socket.data.decode);
       app.set(SOCKET_LIST, socketList);
     } else {
       app.set(SOCKET_LIST, null);
-      socket.emit(SOCKET_EMIT_ACTIONS.AUTHEN_SUCCESS);
+      socket.emit(SOCKET_EMIT_ACTIONS.AUTHEN_FAIL);
       socket.disconnect();
     }
-  }, 1500);
-});
+  },1500)}
+);
 
 app.use("/upload", uploadRouter);
 app.use("/authen", authenticationRouter);
 app.use("/user", userRouter);
 app.use("/conversation", conversationRouter);
+app.use("/message",messageRouter)
+
+
 
 app.get("/cook", (req, res) => {
   res.cookie("cook", "hyy").json({ name: req.hostname });

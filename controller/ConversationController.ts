@@ -165,4 +165,15 @@ export class ConversationController {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
   }
+
+public async getConversation(
+  req: Request,
+  res: Response,
+  next: NextFunction){
+    const {offset,limit}=req.query;
+}
+
+
+
+
 }

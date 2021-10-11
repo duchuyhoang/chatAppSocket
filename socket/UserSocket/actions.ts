@@ -54,7 +54,6 @@ export const UserActions = {
       socket.emit(SOCKET_EMIT_ACTIONS.SOCKET_READY);
       // Pass list friend to current user
       socket.emit(SOCKET_EMIT_ACTIONS.LIST_FRIEND, { data: listFriendReturn });
-      // console.log("name",namespace);
     } catch (err) {
       socket.emit(SOCKET_EMIT_ACTIONS.LIST_FRIEND, { data: [] });
     }

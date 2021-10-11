@@ -7,7 +7,7 @@ import jwt from "jsonwebtoken";
 import firebase from "../firebase/admin";
 import { storageRef } from "../firebase/app";
 import { uploadBytes, getDownloadURL } from "firebase/storage";
-import {UploadMulterMemoryFile} from "./multer";
+import { UploadMulterMemoryFile } from "./multer";
 require("dotenv").config();
 
 import { VALIDATION_ERROR, VALIDATION_STATUS } from "../common/constants";
@@ -49,7 +49,7 @@ const throwValidateError = (error: ValidationError, next: NextFunction) => {
 };
 
 const throwNormalError = (message: string, next: NextFunction) => {
-  next(new Error(message||"Unexpected error"));
+  next(new Error(message || "Unexpected error"));
 };
 
 const throwHttpError = (
@@ -90,15 +90,12 @@ const generateRefreshToken = (input: any) => {
   // process.env.REFRESH_TOKEN_EXPIRE_TIME / 1000
 };
 
-
-
 // function translateToUploadFile(file:Express.Multer.File):UploadMulterMemoryFile{
 
 // return {
 // file,
 // newName:
 // }
-
 
 // }
 
@@ -112,34 +109,52 @@ function toArrayBuffer(buf: Buffer) {
 }
 // fileName:string,mimetype:string,buffer:Buffer
 
-async function uploadSingle(uploadedFile:UploadMulterMemoryFile){
+async function uploadSingle(uploadedFile: UploadMulterMemoryFile) {
   const unit8Array = toArrayBuffer(uploadedFile.file.buffer);
-  const result = await uploadBytes(storageRef(uploadedFile.newName), unit8Array);
+  const result = await uploadBytes(
+    storageRef(uploadedFile.newName),
+    unit8Array
+  );
   const link = await getDownloadURL(storageRef(uploadedFile.newName));
   return link;
 }
-async function uploadMultipleImage(listFile:UploadMulterMemoryFile[]){
-  const listLink=await Promise.all([listFile.map((file)=>uploadSingle(file))]);
+async function uploadMultipleImage(listFile: UploadMulterMemoryFile[]) {
+  // return new Promise<string[]>((resolve,reject) => {
+
+  // })
+
+  const listLink = Promise.all(listFile.map((file) => uploadSingle(file)));
   return listLink;
 }
 
- const forBulkInsert = <T>(dataList:Array<T>, insertedId:string) => {
+const forBulkInsert = <T>(dataList: Array<T>, insertedId: string) => {
   // imageList will be [[1,2,3],[1,4,5],[1,6,7]]
   // do this for bulk insert after
   let multidimensionArrayData: any[][] = [];
   dataList.forEach((data, _) => {
-      let oneArrayData:any[] = [insertedId];
-      for (let key in data) {
-          oneArrayData.push(data[key])
-      }
-      multidimensionArrayData.push(oneArrayData)
-      // imageList will be [[1,2,3],[1,4,5],[1,6,7]]
-      // do this for bulk insert after 
-  })
+    let oneArrayData: any[] = [insertedId];
+    for (let key in data) {
+      oneArrayData.push(data[key]);
+    }
+    multidimensionArrayData.push(oneArrayData);
+    // imageList will be [[1,2,3],[1,4,5],[1,6,7]]
+    // do this for bulk insert after
+  });
 
-return multidimensionArrayData;
+  return multidimensionArrayData;
+};
 
+const formatDate=(date:Date)=>{
+  var dateStr =
+  date.getFullYear() + "-" +
+  ("00" + (date.getMonth() + 1)).slice(-2) + "-" +
+  ("00" + date.getDate()).slice(-2) + " " +
+  ("00" + date.getHours()).slice(-2) + ":" +
+  ("00" + date.getMinutes()).slice(-2) + ":" +
+  ("00" + date.getSeconds()).slice(-2);
+  return dateStr;
 }
+
 
 export {
   randomId,
@@ -153,5 +168,6 @@ export {
   uploadSingle,
   uploadMultipleImage,
   forBulkInsert,
+  formatDate
   // translateToUploadFile
 };

@@ -3,7 +3,8 @@ import express from "express";
 import multer from "multer";
 import { verifyToken } from "../middlewares/authenticate";
 import { imageUpload } from "../common/multer";
-import {handleUploadFile} from "../common/multer";
+import { handleUploadFile } from "../common/multer";
+import { validateMessageInput } from "../middlewares/message";
 const messageRouter = express.Router();
 
 messageRouter.post(
@@ -20,6 +21,11 @@ messageRouter.post(
     },
   ]),
   handleUploadFile,
-new MessageController().insertNewMessage
+  validateMessageInput,
+  new MessageController().insertNewMessage
 );
+
+messageRouter.get("/getMessages",verifyToken,new MessageController().getMesssages);
+
+
 export default messageRouter;
