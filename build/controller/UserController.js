@@ -14,12 +14,12 @@ const constants_1 = require("../common/constants");
 const functions_1 = require("../common/functions");
 const UserDao_1 = require("../Dao/UserDao");
 const index_1 = require("../socket/index");
-;
 class UserController {
     constructor() {
         this.UserDao = new UserDao_1.UserDao();
         this.getUserFriend = this.getUserFriend.bind(this);
         this.searchUserByEmailOrPhone = this.searchUserByEmailOrPhone.bind(this);
+        this.viewRelationshipStatus = this.viewRelationshipStatus.bind(this);
     }
     getUserFriend(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -38,18 +38,38 @@ class UserController {
             if (req.app.get(constants_1.SOCKET_LIST)) {
                 // const socketList = req.app.get(SOCKET_LIST);
                 // const namespace: Namespace = req.app.get(SOCKET_LIST)["/USER"];
-                const namespace2 = index_1.socketList["/NOTIFICATION"];
-                // console.log("nn", namespace2.adapter.rooms);
+                const namespace2 = index_1.socketList["/CONVERSATION"];
             }
             else {
             }
             const { email = null, phone = null } = req.query;
+            const userInfo = res.locals.decodeToken;
             try {
-                const result = yield this.UserDao.searchUserByEmailOrPhone(email, phone);
+                const result = yield this.UserDao.searchUserByEmailOrPhone(email, phone, userInfo.id_user.toString());
+                // result.map((user)=>{
+                //   delete 
+                // })
                 res.json({ result });
             }
             catch (err) {
                 console.log(err);
+                (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
+            }
+        });
+    }
+    viewRelationshipStatus(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id_friend } = req.query;
+            const userInfo = res.locals.decodeToken;
+            if (!id_friend) {
+                res.status(constants_1.BAD_REQUEST).json({ message: "Id friend required" });
+                return;
+            }
+            try {
+                const status = yield this.UserDao.getFriendStatusBetween(userInfo.id_user.toString(), id_friend.toString() || "");
+                res.json({ status });
+            }
+            catch (err) {
                 (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
             }
         });

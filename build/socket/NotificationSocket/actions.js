@@ -21,7 +21,6 @@ exports.NotificationSocketActions = {
         yield (0, socket_1.resetRoom)(socket, socket.id, constants_1.SOCKET_PREFIX.NOTIFICATION + userInfo.id_user);
         userNotificationList[constants_1.SOCKET_PREFIX.NOTIFICATION + userInfo.id_user] =
             userInfo;
-        console.log("r", namespace.adapter.rooms);
         socket.emit(constants_1.SOCKET_EMIT_ACTIONS.SOCKET_READY);
     }),
     onDisconnect: (namespace, socket) => {

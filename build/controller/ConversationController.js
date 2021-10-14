@@ -15,6 +15,7 @@ const UserInConversationDao_1 = require("../Dao/UserInConversationDao");
 const functions_1 = require("../common/functions");
 const Conversation_1 = require("../validations/Conversation");
 const constants_1 = require("../common/constants");
+const actions_1 = require("../socket/ConversationSocket/actions");
 class ConversationController {
     constructor() {
         this.conversationDao = new ConversationDao_1.ConversationDao();
@@ -23,6 +24,7 @@ class ConversationController {
         this.createPrivateConversation = this.createPrivateConversation.bind(this);
         this.checkPrivateConversationBetween =
             this.checkPrivateConversationBetween.bind(this);
+        this.getConversations = this.getConversations.bind(this);
     }
     checkPrivateConversationBetween(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -46,13 +48,13 @@ class ConversationController {
                     res.json({ idRoom: null });
             }
             catch (error) {
-                console.log(error);
                 (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
             }
         });
     }
     createGroupConversation(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
+            // list_user need to be an json array
             const { title, list_user } = req.body;
             try {
                 const isValid = yield Conversation_1.ConversationCreateGroupChatSchema.validate({ title, list_user }, {
@@ -64,7 +66,7 @@ class ConversationController {
                 return;
             }
             try {
-                const userInfo = res.locals.decode.id_user;
+                const userInfo = res.locals.decodeToken;
                 const { insertId: newIdRoom } = yield this.conversationDao.addNewGroupConversation(title, userInfo.id_user);
                 const parseListUser = JSON.parse(list_user);
                 parseListUser.indexOf(parseInt(userInfo.id_user)) === -1 &&
@@ -75,6 +77,10 @@ class ConversationController {
                     };
                 }), newIdRoom.toString());
                 yield this.userInConversationDao.addUsersToConversation(data);
+                const newConversation = yield this.conversationDao.getConversationById(newIdRoom.toString());
+                if (newConversation) {
+                    this.emitJoinRoom(req, parseListUser, newConversation);
+                }
                 res.json({ newIdRoom: newIdRoom });
             }
             catch (error) {
@@ -82,6 +88,12 @@ class ConversationController {
                 return;
             }
         });
+    }
+    emitJoinRoom(req, listUser, newConversation) {
+        const conversationSocket = req.app.get(constants_1.SOCKET_LIST)[constants_1.SOCKET_NAMESPACE.CONVERSATION];
+        if (conversationSocket) {
+            actions_1.RoomSocketActions.handleRoomGroup(conversationSocket, listUser, newConversation);
+        }
     }
     createPrivateConversation(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -128,9 +140,17 @@ class ConversationController {
             }
         });
     }
-    getConversation(req, res, next) {
+    getConversations(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { offset, limit } = req.query;
+            const userInfo = res.locals.decodeToken;
+            try {
+                const listConversations = yield this.conversationDao.getConversationByUser(userInfo.id_user.toString());
+                res.json({ data: listConversations });
+            }
+            catch (error) {
+                console.log(error);
+                (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
+            }
         });
     }
 }

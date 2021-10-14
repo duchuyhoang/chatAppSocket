@@ -41,12 +41,12 @@ const bindLocals = (res, data) => {
 };
 exports.bindLocals = bindLocals;
 const throwValidateError = (error, next) => {
-    next(new CustomValidationError_1.CustomValidationError(constants_1.VALIDATION_ERROR, constants_1.VALIDATION_STATUS, error.inner.map((err) => {
-        return {
-            field: err.path || "",
-            errors: err.errors || [],
-        };
-    })));
+    var _a;
+    const validateError = [...error.inner.map((err) => {
+            return { field: err.path || "", errors: err.errors || [] };
+        }),];
+    error.params && validateError.push({ field: ((_a = error === null || error === void 0 ? void 0 : error.params) === null || _a === void 0 ? void 0 : _a.path) || "", errors: error.errors || [] });
+    next(new CustomValidationError_1.CustomValidationError(constants_1.VALIDATION_ERROR, constants_1.VALIDATION_STATUS, validateError));
 };
 exports.throwValidateError = throwValidateError;
 const throwNormalError = (message, next) => {

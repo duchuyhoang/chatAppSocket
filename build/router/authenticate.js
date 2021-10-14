@@ -16,4 +16,5 @@ authenticationRouter.post("/signup", multer_1.imageUpload.fields([
     },
 ]), multer_1.handleUploadFile, new AuthenticationController_1.AuthenticationController().signUp);
 authenticationRouter.post("/re_login", authenticate_1.verifyToken, new AuthenticationController_1.AuthenticationController().reLogin);
+authenticationRouter.post("/refresh_token", new AuthenticationController_1.AuthenticationController().refreshToken);
 exports.default = authenticationRouter;

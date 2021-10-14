@@ -19,18 +19,23 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthenticationController = void 0;
 const AuthenticationDao_1 = require("../Dao/AuthenticationDao");
 const Authentication_1 = require("../validations/Authentication");
 const functions_1 = require("../common/functions");
 const constants_1 = require("../common/constants");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 class AuthenticationController {
     constructor() {
         this.authenticationDao = new AuthenticationDao_1.AuthenticationDao();
         this.login = this.login.bind(this);
         this.signUp = this.signUp.bind(this);
         this.reLogin = this.reLogin.bind(this);
+        this.refreshToken = this.refreshToken.bind(this);
     }
     login(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -72,7 +77,7 @@ class AuthenticationController {
                     phone,
                     name,
                     avatar,
-                    sex
+                    sex,
                 }, {
                     abortEarly: false,
                 });
@@ -98,13 +103,12 @@ class AuthenticationController {
                         phone,
                         name,
                         avatar,
-                        sex
+                        sex,
                     });
                     res.json({
                         accessToken: (0, functions_1.generateAccessToken)({
                             id_user: insertRecord.insertId,
                             email,
-                            password,
                             phone,
                             name,
                             avatar,
@@ -112,7 +116,6 @@ class AuthenticationController {
                         refreshToken: (0, functions_1.generateRefreshToken)({
                             id_user: insertRecord.insertId,
                             email,
-                            password,
                             phone,
                             name,
                             avatar,
@@ -140,6 +143,29 @@ class AuthenticationController {
             else
                 res.status(401).json({ message: "Unauthorized" });
         });
+    }
+    refreshToken(req, res) {
+        const refreshToken = req.body.refresh_token || null;
+        if (refreshToken) {
+            jsonwebtoken_1.default.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET || "", (err, decode) => {
+                if (err) {
+                    res.status(401).json({ err });
+                }
+                else {
+                    const { id_user, email, phone, name, avatar } = decode;
+                    const accessToken = (0, functions_1.generateAccessToken)({
+                        id_user,
+                        email,
+                        phone,
+                        name,
+                        avatar,
+                    });
+                    res.status(200).json({ accessToken });
+                }
+            });
+        }
+        else
+            res.status(401).json({ message: "Unauthorized" });
     }
 }
 exports.AuthenticationController = AuthenticationController;

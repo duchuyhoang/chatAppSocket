@@ -18,13 +18,11 @@ const ConversationSocket = (namespace) => {
         .off("connection", () => { })
         .on("connection", (socket) => __awaiter(void 0, void 0, void 0, function* () {
         yield actions_1.RoomSocketActions.initialActions(namespace, socket);
-        // console.log(namespace._e);
         namespace.removeAllListeners();
         socket.on("disconnect", () => {
             console.log("dis");
             socket.removeAllListeners("connection");
             socket.off("connection", () => { });
-            // console.log("refresh");
             // socket.off(SOCKET_ON_ACTIONS.ON_TYPING);
             // socket.disconnect();
         });

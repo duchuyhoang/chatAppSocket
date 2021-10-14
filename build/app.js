@@ -111,9 +111,10 @@ app.use((err, req, res, next) => {
         });
     }
     else if (err instanceof CustomValidationError_1.CustomValidationError) {
+        console.log(err);
         res.status(err.status | constants_1.INTERNAL_SERVER).json({
             message: err.message,
-            errors: err.fieldsError,
+            errors: err,
         });
     }
     else {
@@ -125,3 +126,4 @@ app.use((err, req, res, next) => {
 server.listen(process.env.PORT || 3001, () => {
     console.log("Hello world");
 });
+// mysqldump --column-statistics=0 --routines -u root -p  chat_app > filename.sql

@@ -13,6 +13,7 @@ exports.RoomSocketActions = void 0;
 const constants_1 = require("../../common/constants");
 const ConversationDao_1 = require("../../Dao/ConversationDao");
 const userInRoom = {};
+const userSocket = {};
 exports.RoomSocketActions = {
     initialActions: (namespace, socket) => __awaiter(void 0, void 0, void 0, function* () {
         // getConversationByUser
@@ -25,6 +26,7 @@ exports.RoomSocketActions = {
             const listConversations = yield conversationDao.getConversationByUser(userInfo.id_user.toString());
             // Specific user in room
             userInRoom[constants_1.SOCKET_PREFIX.USER + userInfo.id_user] = [];
+            userSocket[constants_1.SOCKET_PREFIX.USER + userInfo.id_user] = socket.id;
             const rooms = [];
             listConversations.map((conversation) => {
                 //  socket.join(
@@ -41,6 +43,27 @@ exports.RoomSocketActions = {
     }),
     joinConversation: (socket, id_conversation) => __awaiter(void 0, void 0, void 0, function* () {
         socket.join(constants_1.SOCKET_PREFIX.CONVERSATION + id_conversation.toString());
+    }),
+    handleRoomGroup: (namespace, listUser, newConversation) => __awaiter(void 0, void 0, void 0, function* () {
+        let matchedSocket = [];
+        namespace.sockets.forEach((socket) => {
+            const userInfo = socket.data.decode;
+            if (listUser.indexOf(userInfo.id_user.toString()) != 1) {
+                // Join new room
+                socket.join(constants_1.SOCKET_PREFIX.CONVERSATION + newConversation.id_room);
+                // update list user and their room
+                userInRoom[constants_1.SOCKET_PREFIX.USER + userInfo.id_user].push(constants_1.SOCKET_PREFIX.CONVERSATION + newConversation.id_room);
+                // Emit to all matched socket to join new room
+                // console.log("c",namespace.in(socket.id));
+                // console.log("c",namespace.in(SOCKET_NAMESPACE.CONVERSATION+"#"+socket.id));
+                namespace
+                    .in(socket.id)
+                    .emit(constants_1.SOCKET_EMIT_ACTIONS.JOIN_NEW_ROOM, newConversation);
+            }
+        });
+        // listUser.forEach((idUser:string)=>{
+        //   namespace.to(userSocket[SOCKET_PREFIX.USER+idUser]).emit
+        // })
     }),
     emitMessageToConversation: (namespace, id_conversation, data) => {
         namespace

@@ -19,7 +19,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SendMessageSchema = void 0;
+exports.GetMessageSchema = exports.SendMessageSchema = void 0;
 const yup = __importStar(require("yup"));
 const constants_1 = require("../common/constants");
 exports.SendMessageSchema = yup.object().shape({
@@ -37,4 +37,8 @@ exports.SendMessageSchema = yup.object().shape({
         });
         return pass;
     }),
+});
+exports.GetMessageSchema = yup.object().shape({
+    limit: yup.number().min(1, "Need at least 1").max(30, "Max 30 messages").required("Need a number").typeError('Need a number'),
+    offset: yup.number().min(0, "Need at least 0").required("Need a number").typeError('Need a number')
 });

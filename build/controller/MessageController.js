@@ -12,11 +12,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MessageController = void 0;
 const MessageDao_1 = require("../Dao/MessageDao");
 const Message_1 = require("../models/Message");
+const Message_2 = require("../validations/Message");
 const functions_1 = require("../common/functions");
 const constants_1 = require("../common/constants");
 const UserInConversationDao_1 = require("../Dao/UserInConversationDao");
+const MessageCache_1 = require("../cache/MessageCache");
 const actions_1 = require("../socket/NotificationSocket/actions");
 const actions_2 = require("../socket/ConversationSocket/actions");
+const pagination_1 = require("../common/pagination");
 class MessageController {
     constructor() {
         this.emitMessage = (req, listUser, userInfo, id_conversation, notificationEmitData, messageEmitData) => {
@@ -95,6 +98,7 @@ class MessageController {
     insertTextMessage(req, res, next, listUser) {
         return __awaiter(this, void 0, void 0, function* () {
             const { content, id_conversation } = req.body;
+            const cachePrefix = constants_1.CACHE_PREFIX.MESSAGE + id_conversation;
             const userInfo = res.locals.decodeToken;
             try {
                 const dbResult = yield this.messageDao.insertNewTextMessage({
@@ -112,6 +116,11 @@ class MessageController {
                     id_conversation,
                     createAt: new Date().toISOString(),
                 });
+                // Set cache
+                MessageCache_1.MessageCache.set(constants_1.CACHE_PREFIX.MESSAGE + id_conversation, [
+                    ...(MessageCache_1.MessageCache.get(cachePrefix) || []),
+                    message,
+                ]);
                 this.emitMessage(req, listUser, userInfo, id_conversation, {
                     idMessage: dbResult.insertId,
                     notificationType: constants_1.NOTIFICATION_TYPE.NEW_MESSAGE,
@@ -131,9 +140,9 @@ class MessageController {
         return __awaiter(this, void 0, void 0, function* () {
             let listImageLink = null;
             let imageLink = null;
-            const imageInsertedId = [];
             let data = [];
             const { type, id_conversation = "" } = req.body;
+            const cachePrefix = constants_1.CACHE_PREFIX.MESSAGE + id_conversation;
             const userInfo = res.locals.decodeToken;
             try {
                 const listImage = res.locals.imageInfo;
@@ -184,6 +193,11 @@ class MessageController {
                             }));
                         }
                     }
+                    // set cache
+                    MessageCache_1.MessageCache.set(constants_1.CACHE_PREFIX.MESSAGE + id_conversation, [
+                        ...(MessageCache_1.MessageCache.get(cachePrefix) || []),
+                        ...data,
+                    ]);
                     this.emitMessage(req, listUser, userInfo, id_conversation, {
                         type: constants_1.MESSAGE_TYPE.IMAGE,
                         notificationType: constants_1.NOTIFICATION_TYPE.NEW_MESSAGE,
@@ -206,6 +220,7 @@ class MessageController {
             let imageLink = null;
             let data = [];
             const { type, id_conversation = "", content } = req.body;
+            const cachePrefix = constants_1.CACHE_PREFIX.MESSAGE + id_conversation;
             const userInfo = res.locals.decodeToken;
             const listImage = res.locals.imageInfo;
             try {
@@ -273,6 +288,11 @@ class MessageController {
                             }));
                         }
                     }
+                    // set cache
+                    MessageCache_1.MessageCache.set(constants_1.CACHE_PREFIX.MESSAGE + id_conversation, [
+                        ...(MessageCache_1.MessageCache.get(cachePrefix) || []),
+                        ...data,
+                    ]);
                     this.emitMessage(req, listUser, userInfo, id_conversation, {
                         type: constants_1.MESSAGE_TYPE.TEXT_AND_IMAGE,
                         notificationType: constants_1.NOTIFICATION_TYPE.NEW_MESSAGE,
@@ -291,8 +311,17 @@ class MessageController {
     }
     getMesssages(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { offset, limit, id_conversation } = req.query;
-            console.log(req.query);
+            const { offset, limit, id_conversation = "" } = req.query;
+            try {
+                const isValid = yield Message_2.GetMessageSchema.validate({
+                    offset,
+                    limit,
+                });
+            }
+            catch (err) {
+                (0, functions_1.throwValidateError)(err, next);
+                return;
+            }
             const userInfo = res.locals.decodeToken;
             let userExist = false;
             try {
@@ -307,8 +336,17 @@ class MessageController {
                     res.status(constants_1.UNAUTHORIZED).json({ message: "Unauthorized" });
                     return;
                 }
-                const listMessage = yield this.messageDao.getMessageByConversation((id_conversation === null || id_conversation === void 0 ? void 0 : id_conversation.toString()) || "");
-                res.json({ messages: listMessage });
+                let listMessage = [];
+                const memoMessages = MessageCache_1.MessageCache.get(constants_1.CACHE_PREFIX.MESSAGE + id_conversation);
+                if (!memoMessages) {
+                    listMessage = yield this.messageDao.getMessageByConversation((id_conversation === null || id_conversation === void 0 ? void 0 : id_conversation.toString()) || "");
+                    MessageCache_1.MessageCache.set(constants_1.CACHE_PREFIX.MESSAGE + id_conversation, listMessage);
+                }
+                else {
+                    console.log("memo");
+                    listMessage = memoMessages;
+                }
+                res.json(Object.assign({}, (0, pagination_1.Pagination)(listMessage, parseInt((offset === null || offset === void 0 ? void 0 : offset.toString()) || "0"), parseInt((limit === null || limit === void 0 ? void 0 : limit.toString()) || "1"))));
             }
             catch (err) {
                 (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
