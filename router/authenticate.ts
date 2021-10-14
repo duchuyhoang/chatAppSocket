@@ -15,7 +15,8 @@ authenticationRouter.post(
   handleUploadFile,
   new AuthenticationController().signUp
 );
-authenticationRouter.post("/re_login",verifyToken, new AuthenticationController().reLogin)
+authenticationRouter.post("/re_login",verifyToken, new AuthenticationController().reLogin);
 
+authenticationRouter.post("/refresh_token", new AuthenticationController().refreshToken);
 
 export default authenticationRouter;

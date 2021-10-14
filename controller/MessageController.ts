@@ -1,13 +1,14 @@
 import { NextFunction, Response, Request } from "express";
 import { MessageDao } from "../Dao/MessageDao";
 import { generateMessage, IQueryMessage, Message } from "../models/Message";
-import { SendMessageSchema } from "../validations/Message";
+import { SendMessageSchema, GetMessageSchema } from "../validations/Message";
 import {
   throwHttpError,
   uploadMultipleImage,
   uploadSingle,
   forBulkInsert,
   formatDate,
+  throwValidateError,
 } from "../common/functions";
 import { IconInfo } from "../TS/File";
 import {
@@ -22,16 +23,17 @@ import {
   DB_ERROR,
   BAD_REQUEST,
   DEL_FLAG,
+  CACHE_PREFIX,
 } from "../common/constants";
 import { UserInConversation } from "../models/UserInConversation";
 import { UserInConversationDao } from "../Dao/UserInConversationDao";
 import { DecodedUser } from "../models/User";
 import { OkPacket } from "mysql";
 import { Namespace } from "socket.io";
-import { IUserInConversationQuery } from "../models/UserInConversation";
-import { ISendNotification } from "../models/Notification";
+import { MessageCache } from "../cache/MessageCache";
 import { NotificationSocketActions } from "../socket/NotificationSocket/actions";
 import { RoomSocketActions } from "../socket/ConversationSocket/actions";
+import { Pagination } from "../common/pagination";
 export class MessageController {
   private messageDao: MessageDao;
   private userInConversationDao: UserInConversationDao;
@@ -49,7 +51,7 @@ export class MessageController {
     userInfo: DecodedUser,
     id_conversation: string,
     notificationEmitData: any,
-    messageEmitData: Message | Message[]
+    messageEmitData: IQueryMessage | IQueryMessage[]
   ) => {
     const notificationSocket: Namespace =
       req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.NOTIFICATION];
@@ -157,6 +159,7 @@ export class MessageController {
     listUser: UserInConversation[]
   ) {
     const { content, id_conversation } = req.body;
+    const cachePrefix = CACHE_PREFIX.MESSAGE + id_conversation;
     const userInfo: DecodedUser = res.locals.decodeToken;
     try {
       const dbResult: OkPacket = await this.messageDao.insertNewTextMessage({
@@ -165,7 +168,7 @@ export class MessageController {
         id_user: userInfo.id_user.toString(),
       });
 
-      const message: Message = generateMessage({
+      const message: IQueryMessage = generateMessage({
         id_message: dbResult.insertId.toString(),
         type: MESSAGE_TYPE.TEXT,
         content: content,
@@ -175,6 +178,12 @@ export class MessageController {
         id_conversation,
         createAt: new Date().toISOString(),
       });
+
+      // Set cache
+      MessageCache.set(CACHE_PREFIX.MESSAGE + id_conversation, [
+        ...(MessageCache.get<IQueryMessage[]>(cachePrefix) || []),
+        message,
+      ]);
 
       this.emitMessage(
         req,
@@ -206,9 +215,9 @@ export class MessageController {
   ) {
     let listImageLink: string[] | null = null;
     let imageLink = null;
-    const imageInsertedId: string[] = [];
-    let data: Message[] = [];
+    let data: IQueryMessage[] = [];
     const { type, id_conversation = "" } = req.body;
+    const cachePrefix = CACHE_PREFIX.MESSAGE + id_conversation;
     const userInfo: DecodedUser = res.locals.decodeToken;
     try {
       const listImage: IconInfo[] = res.locals.imageInfo;
@@ -275,6 +284,11 @@ export class MessageController {
             );
           }
         }
+        // set cache
+        MessageCache.set(CACHE_PREFIX.MESSAGE + id_conversation, [
+          ...(MessageCache.get<IQueryMessage[]>(cachePrefix) || []),
+          ...data,
+        ]);
 
         this.emitMessage(
           req,
@@ -306,8 +320,9 @@ export class MessageController {
   ) {
     let listImageLink: string[] | null = null;
     let imageLink = null;
-    let data: Message[] = [];
+    let data: IQueryMessage[] = [];
     const { type, id_conversation = "", content } = req.body;
+    const cachePrefix = CACHE_PREFIX.MESSAGE + id_conversation;
     const userInfo: DecodedUser = res.locals.decodeToken;
     const listImage: IconInfo[] = res.locals.imageInfo;
     try {
@@ -396,6 +411,11 @@ export class MessageController {
             );
           }
         }
+        // set cache
+        MessageCache.set(CACHE_PREFIX.MESSAGE + id_conversation, [
+          ...(MessageCache.get<IQueryMessage[]>(cachePrefix) || []),
+          ...data,
+        ]);
 
         this.emitMessage(
           req,
@@ -420,9 +440,18 @@ export class MessageController {
   }
 
   public async getMesssages(req: Request, res: Response, next: NextFunction) {
-    const { offset, limit, id_conversation } = req.query;
-    console.log(req.query);
-    
+    const { offset, limit, id_conversation = "" } = req.query;
+
+    try {
+      const isValid = await GetMessageSchema.validate({
+        offset,
+        limit,
+      });
+    } catch (err: any) {    
+      throwValidateError(err, next);
+      return;
+    }
+
     const userInfo: DecodedUser = res.locals.decodeToken;
     let userExist = false;
     try {
@@ -442,11 +471,29 @@ export class MessageController {
         return;
       }
 
-      const listMessage: IQueryMessage[] =
-        await this.messageDao.getMessageByConversation(
+      let listMessage: IQueryMessage[] = [];
+
+      const memoMessages: IQueryMessage[] | undefined = MessageCache.get<
+        IQueryMessage[]
+      >(CACHE_PREFIX.MESSAGE + id_conversation);
+
+      if (!memoMessages) {
+        listMessage = await this.messageDao.getMessageByConversation(
           id_conversation?.toString() || ""
         );
-      res.json({ messages: listMessage });
+        MessageCache.set(CACHE_PREFIX.MESSAGE + id_conversation, listMessage);
+      } else {
+        console.log("memo");        
+        listMessage = memoMessages;
+      }
+
+      res.json({
+        ...Pagination(
+          listMessage,
+          parseInt(offset?.toString() || "0"),
+          parseInt(limit?.toString() || "1")
+        ),
+      });
     } catch (err) {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }

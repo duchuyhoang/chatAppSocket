@@ -13,8 +13,13 @@ import {
   ConversationCreatePrivateChatSchema,
   ConversationCheckPrivateChatExistSchema,
 } from "../validations/Conversation";
-import { BAD_REQUEST, DB_ERROR } from "../common/constants";
+import { BAD_REQUEST, DB_ERROR, SOCKET_LIST, SOCKET_NAMESPACE } from "../common/constants";
 import { DecodedUser } from "../models/User";
+import { ConversationWithCreatorInfo } from "../TS/Conversation";
+import { RoomSocketActions } from "../socket/ConversationSocket/actions";
+import { Namespace } from "socket.io";
+
+
 export class ConversationController {
   private conversationDao: ConversationDao;
   private userInConversationDao: UserInConversationDao;
@@ -25,6 +30,7 @@ export class ConversationController {
     this.createPrivateConversation = this.createPrivateConversation.bind(this);
     this.checkPrivateConversationBetween =
       this.checkPrivateConversationBetween.bind(this);
+    this.getConversations = this.getConversations.bind(this);
   }
 
   public async checkPrivateConversationBetween(
@@ -53,7 +59,6 @@ export class ConversationController {
         res.json({ idRoom: result.id_room });
       } else res.json({ idRoom: null });
     } catch (error) {
-      console.log(error);
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
   }
@@ -63,6 +68,7 @@ export class ConversationController {
     res: Response,
     next: NextFunction
   ) {
+    // list_user need to be an json array
     const { title, list_user } = req.body;
     try {
       const isValid = await ConversationCreateGroupChatSchema.validate(
@@ -77,7 +83,7 @@ export class ConversationController {
     }
 
     try {
-      const userInfo = res.locals.decode.id_user;
+      const userInfo = res.locals.decodeToken;
       const { insertId: newIdRoom }: OkPacket =
         await this.conversationDao.addNewGroupConversation(
           title,
@@ -98,12 +104,40 @@ export class ConversationController {
       );
 
       await this.userInConversationDao.addUsersToConversation(data);
+
+const newConversation:ConversationWithCreatorInfo|null=await this.conversationDao.getConversationById(newIdRoom.toString());
+
+if(newConversation){
+  this.emitJoinRoom(req,parseListUser,newConversation)
+}
+
       res.json({ newIdRoom: newIdRoom });
-    } catch (error) {
+    } catch (error) {   
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
       return;
     }
   }
+
+
+private emitJoinRoom(req: Request,
+  listUser: string[],
+  newConversation:ConversationWithCreatorInfo
+  ){
+    const conversationSocket: Namespace =req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.CONVERSATION];
+
+if(conversationSocket){
+ RoomSocketActions.handleRoomGroup(conversationSocket,listUser,newConversation)
+}
+
+
+
+    
+
+
+    
+
+}
+
 
   public async createPrivateConversation(
     req: Request,
@@ -166,14 +200,22 @@ export class ConversationController {
     }
   }
 
-public async getConversation(
-  req: Request,
-  res: Response,
-  next: NextFunction){
-    const {offset,limit}=req.query;
-}
+  public async getConversations(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    const userInfo: DecodedUser = res.locals.decodeToken;
 
-
-
-
+    try {
+      const listConversations: ConversationWithCreatorInfo[] =
+        await this.conversationDao.getConversationByUser(
+          userInfo.id_user.toString()
+        );
+      res.json({ data: listConversations });
+    } catch (error) {
+      console.log(error);      
+      throwHttpError(DB_ERROR, BAD_REQUEST, next);
+    }
+  }
 }

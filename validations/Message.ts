@@ -18,3 +18,9 @@ export const SendMessageSchema = yup.object().shape({
       return pass;
     }),
 });
+
+
+export const GetMessageSchema=yup.object().shape({
+  limit:yup.number().min(1,"Need at least 1").max(30,"Max 30 messages").required("Need a number").typeError('Need a number'),
+  offset:yup.number().min(0,"Need at least 0").required("Need a number").typeError('Need a number')
+})

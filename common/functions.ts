@@ -34,16 +34,18 @@ const bindLocals = (res: Response, data: any) => {
 };
 
 const throwValidateError = (error: ValidationError, next: NextFunction) => {
+
+const validateError= [...error.inner.map((err) => {
+  return {field: err.path || "",errors: err.errors || []};}),]
+
+
+  error.params && validateError.push({field:error?.params?.path as string||"",errors:error.errors||[]})
+
   next(
     new CustomValidationError(
       VALIDATION_ERROR,
       VALIDATION_STATUS,
-      error.inner.map((err) => {
-        return {
-          field: err.path || "",
-          errors: err.errors || [],
-        };
-      })
+      validateError
     )
   );
 };

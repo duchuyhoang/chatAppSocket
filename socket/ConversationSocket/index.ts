@@ -8,13 +8,11 @@ export const ConversationSocket = (namespace: Namespace) => {
     .off("connection", () => {})
     .on("connection", async (socket: Socket) => {
       await RoomSocketActions.initialActions(namespace, socket);
-      // console.log(namespace._e);
       namespace.removeAllListeners();
       socket.on("disconnect", () => {
         console.log("dis");
         socket.removeAllListeners("connection");
         socket.off("connection", () => {});
-        // console.log("refresh");
         // socket.off(SOCKET_ON_ACTIONS.ON_TYPING);
         // socket.disconnect();
       });

@@ -8,9 +8,9 @@ export const ConversationCreateGroupChatSchema = yup.object().shape({
     .required("Need list user")
     .test("listUser", "List user wrong", (list_user: any) => {
       try {
-        const list = JSON.parse(list_user);
+        const list = JSON.parse(list_user);      
         return Array.isArray(list) && list?.length > 0;
-      } catch (error) {
+      } catch (error) { 
         return false;
       }
     }),

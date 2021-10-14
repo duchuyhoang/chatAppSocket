@@ -1,5 +1,5 @@
 import { Maybe } from "yup/lib/types";
-import {NOTIFICATION_TYPE} from "../common/constants";
+import {NOTIFICATION_STATUS, NOTIFICATION_TYPE} from "../common/constants";
 
 export interface Notification{
    id_notification:number,
@@ -8,7 +8,8 @@ export interface Notification{
    type: typeof NOTIFICATION_TYPE[keyof typeof NOTIFICATION_TYPE],
    id_receiver:number,
    seenAt:Maybe<String>,
-   createAt:Maybe<String>
+   createAt:Maybe<String>,
+   status:NOTIFICATION_STATUS
 }
 
 export interface ISendNotification{
@@ -16,4 +17,10 @@ export interface ISendNotification{
    type: typeof NOTIFICATION_TYPE[keyof typeof NOTIFICATION_TYPE],
    createAt:string,
    data:any
+}
+
+export interface INewFriendRequestNotification{
+   id_owner:string,
+   id_receiver:string,
+   message:string
 }

@@ -1,5 +1,5 @@
 import { AuthenticationDao } from "../Dao/AuthenticationDao";
-import { User } from "../models/User";
+import { DecodedUser, User } from "../models/User";
 import { Request, Response, NextFunction } from "express";
 import { LoginSchema, SignupSchema } from "../validations/Authentication";
 import {
@@ -11,7 +11,12 @@ import {
   uploadSingle,
 } from "../common/functions";
 import { MysqlError } from "mysql";
-import { BAD_REQUEST, DB_ERROR, SOCKET_LIST, UNAUTHORIZED } from "../common/constants";
+import {
+  BAD_REQUEST,
+  DB_ERROR,
+  SOCKET_LIST,
+  UNAUTHORIZED,
+} from "../common/constants";
 import jwt from "jsonwebtoken";
 export class AuthenticationController {
   private authenticationDao: AuthenticationDao;
@@ -20,6 +25,7 @@ export class AuthenticationController {
     this.login = this.login.bind(this);
     this.signUp = this.signUp.bind(this);
     this.reLogin = this.reLogin.bind(this);
+    this.refreshToken=this.refreshToken.bind(this);
   }
 
   public async login(req: Request, res: Response, next: NextFunction) {
@@ -57,7 +63,7 @@ export class AuthenticationController {
   }
 
   public async signUp(req: Request, res: Response, next: NextFunction) {
-    const { email, password, phone, name,sex } = req.body;
+    const { email, password, phone, name, sex } = req.body;
     let avatar = null;
     try {
       const isValid = await SignupSchema.validate(
@@ -67,7 +73,7 @@ export class AuthenticationController {
           phone,
           name,
           avatar,
-          sex
+          sex,
         },
         {
           abortEarly: false,
@@ -75,7 +81,7 @@ export class AuthenticationController {
       );
     } catch (error: any) {
       throwValidateError(error, next);
-      return ;
+      return;
     }
 
     try {
@@ -95,13 +101,12 @@ export class AuthenticationController {
           phone,
           name,
           avatar,
-          sex
+          sex,
         });
         res.json({
           accessToken: generateAccessToken({
             id_user: insertRecord.insertId,
             email,
-            password,
             phone,
             name,
             avatar,
@@ -109,7 +114,6 @@ export class AuthenticationController {
           refreshToken: generateRefreshToken({
             id_user: insertRecord.insertId,
             email,
-            password,
             phone,
             name,
             avatar,
@@ -124,11 +128,38 @@ export class AuthenticationController {
   public async reLogin(req: Request, res: Response) {
     const oldTokenInfo = res.locals.decodeToken || null;
     if (oldTokenInfo) {
-      const { exp,tokenExpireTime,iat,...rest } = oldTokenInfo;
+      const { exp, tokenExpireTime, iat, ...rest } = oldTokenInfo;
       const accessToken = generateAccessToken({ ...rest });
       res.json({
-        accessToken:accessToken,
+        accessToken: accessToken,
       });
+    } else res.status(401).json({ message: "Unauthorized" });
+  }
+
+  public refreshToken(req: Request, res: Response) {
+    const refreshToken = req.body.refresh_token || null;
+    if (refreshToken) {
+      jwt.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET || "",
+        (err: any, decode: any) => {
+          if (err) {
+            res.status(401).json({ err });
+          } else {
+            const { id_user, email, phone, name, avatar } =
+              decode as DecodedUser;
+
+            const accessToken = generateAccessToken({
+              id_user,
+              email,
+              phone,
+              name,
+              avatar,
+            });
+            res.status(200).json({ accessToken });
+          }
+        }
+      );
     } else res.status(401).json({ message: "Unauthorized" });
   }
 }

@@ -29,16 +29,24 @@ export interface ICreateMessage {
   id_icon?: string;
 }
 
-export const generateMessage = (data: ICreateMessage): Message => {
-  const { content=null,updateAt = null, url = null, id_icon = null, ...rest } = data;
+export const generateMessage = (data: ICreateMessage): IQueryMessage => {
+  const { content=null,updateAt = null, url = null, id_icon = null,createAt,delFlag,userInfo,id_user, ...rest } = data;
+  const {id_user : id_User,...userInfoRest}=userInfo;
   return {
     ...rest,
     updateAt,
     url,
     id_icon,
-    content
+    content,
+    message_del_flag:data.delFlag,
+    message_create_at:data.createAt,
+    id_user:id_user.toString(),
+    ...userInfoRest
   };
 };
+
+export type IQueryMessage=Omit<Message,"createAt"|"delFlag"> & 
+{message_create_at:string,message_del_flag:DEL_FLAG} & Omit<DecodedUser,"id_user">
 
 export interface IInsertTextMessage {
   content: string;
@@ -66,5 +74,4 @@ export interface IEmitMessage {
 }
 
 
-export type IQueryMessage=Omit<Message,"createAt"|"delFlag"> & 
-{message_create_at:string,message_del_flag:DEL_FLAG} & DecodedUser
+

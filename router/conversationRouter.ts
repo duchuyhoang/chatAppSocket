@@ -8,6 +8,6 @@ const upload=multer();
 conversationRouter.post("/createGroupChat",verifyToken,upload.none(),new ConversationController().createGroupConversation);
 conversationRouter.post("/createPrivateChat",verifyToken,upload.none(),new ConversationController().createPrivateConversation);
 conversationRouter.post("/checkPrivateMessage",verifyToken,new ConversationController().checkPrivateConversationBetween);
-
+conversationRouter.get("/getConversations",verifyToken,new ConversationController().getConversations)
 
 export default conversationRouter;
