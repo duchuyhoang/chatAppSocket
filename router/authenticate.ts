@@ -15,6 +15,18 @@ authenticationRouter.post(
   handleUploadFile,
   new AuthenticationController().signUp
 );
+
+// let a =new FormData();
+// 1 ảnh
+// a.append("singleImage",img)
+
+// 2 ảnh
+// for(let ili<n){
+// a.append("multiple")
+
+// }
+
+
 authenticationRouter.post("/re_login",verifyToken, new AuthenticationController().reLogin);
 
 authenticationRouter.post("/refresh_token", new AuthenticationController().refreshToken);

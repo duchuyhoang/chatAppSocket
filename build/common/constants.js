@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CACHE_PREFIX = exports.MESSAGE_STATUS = exports.MESSAGE_TYPE = exports.FORBIDDEN = exports.SOCKET_LIST = exports.NOTIFICATION_TYPE = exports.USER_IN_ROOM_STATUS = exports.NOTIFICATION_STATUS = exports.CONVERSATION_TYPE = exports.FRIEND_STATUS = exports.SOCKET_PREFIX = exports.SOCKET_NAMESPACE = exports.SOCKET_ON_ACTIONS = exports.SOCKET_EMIT_ACTIONS = exports.HOST_NAME = exports.DB_ERROR = exports.REQUEST_SUCCESS = exports.UNAUTHORIZED = exports.INTERNAL_SERVER = exports.BAD_REQUEST = exports.VALIDATION_STATUS = exports.VALIDATION_ERROR = exports.VALIDATION_PHONE_REGEX = exports.DEL_FLAG = exports.imageFolder = exports.iconFolder = exports.serverAddress = void 0;
+exports.GENDER = exports.CACHE_PREFIX = exports.MESSAGE_STATUS = exports.MESSAGE_TYPE = exports.FORBIDDEN = exports.SOCKET_LIST = exports.NOTIFICATION_TYPE = exports.USER_IN_ROOM_STATUS = exports.NOTIFICATION_STATUS = exports.CONVERSATION_TYPE = exports.FRIEND_STATUS = exports.SOCKET_PREFIX = exports.SOCKET_NAMESPACE = exports.SOCKET_ON_ACTIONS = exports.SOCKET_EMIT_ACTIONS = exports.HOST_NAME = exports.DB_ERROR = exports.REQUEST_SUCCESS = exports.UNAUTHORIZED = exports.INTERNAL_SERVER = exports.BAD_REQUEST = exports.VALIDATION_STATUS = exports.VALIDATION_ERROR = exports.VALIDATION_PHONE_REGEX = exports.DEL_FLAG = exports.imageFolder = exports.iconFolder = exports.serverAddress = void 0;
 const serverAddress = "171.241.113.240";
 exports.serverAddress = serverAddress;
 const iconFolder = "/icon/";
@@ -101,6 +101,11 @@ const CACHE_PREFIX = {
     MESSAGE: "MESSAGE_"
 };
 exports.CACHE_PREFIX = CACHE_PREFIX;
+const GENDER = {
+    MALE: 0,
+    FEMALE: 1
+};
+exports.GENDER = GENDER;
 const SOCKET_EMIT_ACTIONS = {
     AUTHEN_SUCCESS: "AUTHEN_SUCCESS",
     AUTHEN_FAIL: "AUTHEN_FAIL",
@@ -120,5 +125,6 @@ const SOCKET_ON_ACTIONS = {
     ON_MESSAGE: "ON_MESSAGE",
     ON_STOP_TYPING: "ON_STOP_TYPING",
     ON_TYPING: "ON_TYPING",
+    ON_AUTHENTICATE: "ON_AUTHENTICATE"
 };
 exports.SOCKET_ON_ACTIONS = SOCKET_ON_ACTIONS;

@@ -27,11 +27,9 @@ class ConversationDao extends BaseDao_1.BaseDao {
     }
     getConversationByUser(id_user) {
         return new Promise((resolve, reject) => {
-            this.db.query(`SELECT conversation.*,
-        user.name as creator_name
-user.email as creator_email,user.avatar as creator_avatar,user.phone as creator_phone, 
-get_count_message(conversation.id_room) as message_count,
-get_last_message(conversation.id_room) as  last_message
+            this.db.query(`SELECT conversation.*,user.name as creator_name,
+user.email as creator_email,user.avatar as creator_avatar,user.phone as creator_phone,
+get_count_message(conversation.id_room) as message_count,get_last_message(conversation.id_room) as last_message
 FROM user_in_conversation 
 INNER JOIN conversation ON user_in_conversation.id_room=conversation.id_room 
 INNER JOIN user ON conversation.creator=user.id_user
@@ -47,10 +45,10 @@ WHERE conversation.delFlag=${constants_1.DEL_FLAG.VALID} AND user_in_conversatio
     getConversationById(id_conversation) {
         return new Promise((resolve, reject) => {
             this.db.query(`SELECT conversation.*,
-          user.name as creator_name
+          user.name as creator_name,
 user.email as creator_email,user.avatar as creator_avatar,user.phone as creator_phone,
 get_count_message(conversation.id_room) as message_count,
-get_last_message(conversation.id_room) as  last_message
+get_last_message(conversation.id_room) as last_message
 FROM conversation 
 INNER JOIN user ON conversation.creator=user.id_user
 WHERE conversation.delFlag=0 AND conversation.id_room=? LIMIT 1;`, [id_conversation], (err, result) => {

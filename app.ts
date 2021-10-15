@@ -21,6 +21,7 @@ import {
   BAD_REQUEST,
   SOCKET_EMIT_ACTIONS,
   SOCKET_NAMESPACE,
+  SOCKET_ON_ACTIONS,
   SOCKET_LIST,
 } from "./common/constants";
 
@@ -82,7 +83,7 @@ io.sockets.on("connection", (socket:Socket) => {
   // });
 
 
-  socket.once("authenticate", (data) => {  
+  socket.once(SOCKET_ON_ACTIONS.ON_AUTHENTICATE, (data) => {  
     jwt.verify(
       data.token,
       process.env.TOKEN_SECRET as string,
@@ -121,7 +122,7 @@ app.use("/user", userRouter);
 app.use("/conversation", conversationRouter);
 app.use("/message",messageRouter)
 
-
+// localhost:300/authen/signup
 
 app.get("/cook", (req, res) => {
   res.cookie("cook", "hyy").json({ name: req.hostname });

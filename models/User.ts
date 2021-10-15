@@ -21,3 +21,13 @@ export interface IFriend extends User{
     updateAt:Maybe<string>,
     // online:boolean
 }
+
+
+export interface IUpdateUser{
+    id_user:string,
+    phone:string,
+    name:string,
+    avatar:string|null
+    password:string
+    sex:number
+}

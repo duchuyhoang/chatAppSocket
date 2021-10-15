@@ -11,3 +11,5 @@ conversationRouter.post("/checkPrivateMessage",verifyToken,new ConversationContr
 conversationRouter.get("/getConversations",verifyToken,new ConversationController().getConversations)
 
 export default conversationRouter;
+
+

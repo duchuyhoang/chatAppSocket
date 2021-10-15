@@ -4,13 +4,20 @@ import {
   SOCKET_LIST,
   SOCKET_NAMESPACE,
 } from "../common/constants";
-import { throwHttpError, throwValidateError } from "../common/functions";
+import {
+  throwHttpError,
+  throwNormalError,
+  throwValidateError,
+  uploadSingle,
+} from "../common/functions";
 import { UserDao } from "../Dao/UserDao";
 import { Request, Response, NextFunction } from "express";
 import { Maybe } from "../TS/Common";
 import { Namespace, Socket } from "socket.io";
 import { socketList } from "../socket/index";
-import { DecodedUser } from "../models/User";
+import { DecodedUser, IUpdateUser } from "../models/User";
+import { OkPacket } from "mysql";
+import { UpdateUserSchema } from "../validations/Authentication";
 export class UserController {
   private UserDao: UserDao;
 
@@ -19,6 +26,7 @@ export class UserController {
     this.getUserFriend = this.getUserFriend.bind(this);
     this.searchUserByEmailOrPhone = this.searchUserByEmailOrPhone.bind(this);
     this.viewRelationshipStatus = this.viewRelationshipStatus.bind(this);
+    this.editUser=this.editUser.bind(this);
   }
 
   public async getUserFriend(req: Request, res: Response, next: NextFunction) {
@@ -43,8 +51,8 @@ export class UserController {
     } else {
     }
     const { email = null, phone = null } = req.query;
-    const userInfo:DecodedUser=res.locals.decodeToken;
-    
+    const userInfo: DecodedUser = res.locals.decodeToken;
+
     try {
       const result = await this.UserDao.searchUserByEmailOrPhone(
         email as Maybe<string>,
@@ -53,10 +61,10 @@ export class UserController {
       );
 
       // result.map((user)=>{
-      //   delete 
+      //   delete
       // })
 
-      res.json({ result});
+      res.json({ result });
     } catch (err) {
       console.log(err);
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
@@ -84,5 +92,54 @@ export class UserController {
     } catch (err) {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
+  }
+
+  public async editUser(req: Request, res: Response, next: NextFunction) {
+    const { password = null, phone = null, name = null, sex = null } = req.body;
+    let avatar = null;
+    const userInfo: DecodedUser = res.locals.decodeToken;
+
+    try {
+      const isValid = await UpdateUserSchema.validate({ password, phone, name, sex });
+    } catch (err: any) {
+      throwValidateError(err, next);
+      return;
+    }
+
+    try {
+      if (res.locals.imageInfo) {
+        avatar = await uploadSingle({
+          file: res.locals.imageInfo[0].originalFile,
+          newName: res.locals.imageInfo[0].newName,
+        });
+      }
+    } catch (error) {}
+
+    let updatePayload: Partial<IUpdateUser> & { [key: string]: any } = {
+      password,
+      phone,
+      name,
+      sex,
+      avatar,
+    };
+
+    console.log(updatePayload);
+
+    Object.keys(updatePayload).map((key: string) => {
+      if (!updatePayload[key]) delete updatePayload[key];
+    });
+
+    if (Object.keys(updatePayload).length === 0) {
+      throwNormalError("Need at least 1 field", next);
+      return;
+    }
+
+    try {
+      let result: OkPacket = await this.UserDao.updateUser({
+        ...updatePayload,
+        id_user: userInfo.id_user.toString(),
+      });
+      res.json({ message: "Ok" });
+    } catch (error) {}
   }
 }

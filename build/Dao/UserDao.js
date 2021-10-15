@@ -25,7 +25,7 @@ class UserDao extends BaseDao_1.BaseDao {
             this.db.query(`
         SELECT selected.*,user_has_friend.* FROM (SELECT ${queryInfoString} FROM user WHERE email LIKE CONCAT('%', ?,  '%') OR phone LIKE CONCAT('%', ?,  '%' AND id_user != ?) AND delFlag=${constants_1.DEL_FLAG.VALID})
         as selected LEFT JOIN user_has_friend ON (selected.id_user=user_has_friend.id_user or selected.id_user=user_has_friend.id_friend) 
-        AND(user_has_friend.id_user=? OR user_has_friend.id_friend=?)
+        AND(user_has_friend.id_user=?)
         `, [email, phone, id_user, id_user, id_user], (err, result) => {
                 if (err)
                     reject(err);
@@ -69,6 +69,18 @@ AND user_has_friend.id_friend=? AND status=${constants_1.FRIEND_STATUS.FRIEND} A
                     resolve(constants_1.FRIEND_STATUS.STRANGE);
                 else
                     resolve(result[result.length - 1].status || constants_1.FRIEND_STATUS.STRANGE);
+            });
+        });
+    }
+    updateUser(payload) {
+        const { id_user } = payload, rest = __rest(payload, ["id_user"]);
+        return new Promise((resolve, reject) => {
+            this.db.query(`UPDATE user SET ? WHERE id_user=?`, [rest, id_user], (err, result) => {
+                if (err)
+                    reject(err);
+                else {
+                    resolve(result);
+                }
             });
         });
     }

@@ -90,11 +90,13 @@ class AuthenticationController {
                 const isUserExist = yield this.authenticationDao.checkUserExist(email);
                 if (!isUserExist) {
                     try {
-                        const link = yield (0, functions_1.uploadSingle)({
-                            file: res.locals.imageInfo[0].originalFile,
-                            newName: res.locals.imageInfo[0].newName,
-                        });
-                        avatar = link;
+                        if (res.locals.imageInfo) {
+                            const link = yield (0, functions_1.uploadSingle)({
+                                file: res.locals.imageInfo[0].originalFile,
+                                newName: res.locals.imageInfo[0].newName,
+                            });
+                            avatar = link;
+                        }
                     }
                     catch (error) { }
                     const insertRecord = yield this.authenticationDao.signup({

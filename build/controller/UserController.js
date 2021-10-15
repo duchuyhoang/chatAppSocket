@@ -14,12 +14,14 @@ const constants_1 = require("../common/constants");
 const functions_1 = require("../common/functions");
 const UserDao_1 = require("../Dao/UserDao");
 const index_1 = require("../socket/index");
+const Authentication_1 = require("../validations/Authentication");
 class UserController {
     constructor() {
         this.UserDao = new UserDao_1.UserDao();
         this.getUserFriend = this.getUserFriend.bind(this);
         this.searchUserByEmailOrPhone = this.searchUserByEmailOrPhone.bind(this);
         this.viewRelationshipStatus = this.viewRelationshipStatus.bind(this);
+        this.editUser = this.editUser.bind(this);
     }
     getUserFriend(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -47,7 +49,7 @@ class UserController {
             try {
                 const result = yield this.UserDao.searchUserByEmailOrPhone(email, phone, userInfo.id_user.toString());
                 // result.map((user)=>{
-                //   delete 
+                //   delete
                 // })
                 res.json({ result });
             }
@@ -72,6 +74,50 @@ class UserController {
             catch (err) {
                 (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
             }
+        });
+    }
+    editUser(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { password = null, phone = null, name = null, sex = null } = req.body;
+            let avatar = null;
+            const userInfo = res.locals.decodeToken;
+            try {
+                const isValid = yield Authentication_1.UpdateUserSchema.validate({ password, phone, name, sex });
+            }
+            catch (err) {
+                (0, functions_1.throwValidateError)(err, next);
+                return;
+            }
+            try {
+                if (res.locals.imageInfo) {
+                    avatar = yield (0, functions_1.uploadSingle)({
+                        file: res.locals.imageInfo[0].originalFile,
+                        newName: res.locals.imageInfo[0].newName,
+                    });
+                }
+            }
+            catch (error) { }
+            let updatePayload = {
+                password,
+                phone,
+                name,
+                sex,
+                avatar,
+            };
+            console.log(updatePayload);
+            Object.keys(updatePayload).map((key) => {
+                if (!updatePayload[key])
+                    delete updatePayload[key];
+            });
+            if (Object.keys(updatePayload).length === 0) {
+                (0, functions_1.throwNormalError)("Need at least 1 field", next);
+                return;
+            }
+            try {
+                let result = yield this.UserDao.updateUser(Object.assign(Object.assign({}, updatePayload), { id_user: userInfo.id_user.toString() }));
+                res.json({ message: "Ok" });
+            }
+            catch (error) { }
         });
     }
 }

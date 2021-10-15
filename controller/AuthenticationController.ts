@@ -88,11 +88,14 @@ export class AuthenticationController {
       const isUserExist = await this.authenticationDao.checkUserExist(email);
       if (!isUserExist) {
         try {
-          const link = await uploadSingle({
-            file: res.locals.imageInfo[0].originalFile,
-            newName: res.locals.imageInfo[0].newName,
-          });
-          avatar = link;
+          if(res.locals.imageInfo){
+            const link = await uploadSingle({
+              file: res.locals.imageInfo[0].originalFile,
+              newName: res.locals.imageInfo[0].newName,
+            });
+            avatar = link;
+          }
+         
         } catch (error) {}
 
         const insertRecord = await this.authenticationDao.signup({

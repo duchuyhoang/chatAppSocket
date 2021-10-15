@@ -64,7 +64,7 @@ io.sockets.on("connection", (socket) => {
     //     );
     //   });
     // });
-    socket.once("authenticate", (data) => {
+    socket.once(constants_1.SOCKET_ON_ACTIONS.ON_AUTHENTICATE, (data) => {
         jsonwebtoken_1.default.verify(data.token, process.env.TOKEN_SECRET, (err, decode) => {
             if (err) {
                 console.log(err);
@@ -99,6 +99,7 @@ app.use("/authen", authenticate_1.default);
 app.use("/user", userRouter_1.default);
 app.use("/conversation", conversationRouter_1.default);
 app.use("/message", messageRouter_1.default);
+// localhost:300/authen/signup
 app.get("/cook", (req, res) => {
     res.cookie("cook", "hyy").json({ name: req.hostname });
 });

@@ -19,7 +19,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SignupSchema = exports.LoginSchema = void 0;
+exports.UpdateUserSchema = exports.SignupSchema = exports.LoginSchema = void 0;
 const yup = __importStar(require("yup"));
 const constants_1 = require("../common/constants");
 exports.LoginSchema = yup.object().shape({
@@ -29,7 +29,13 @@ exports.LoginSchema = yup.object().shape({
 exports.SignupSchema = yup.object().shape({
     email: yup.string().email("Need to be an email").required("Email required"),
     password: yup.string().required("Password required"),
-    phone: yup.string().required("Phone required").matches(constants_1.VALIDATION_PHONE_REGEX, "Phone wron format"),
+    phone: yup.string().required("Phone required").matches(constants_1.VALIDATION_PHONE_REGEX, "Phone wrong format"),
     name: yup.string().required("Name required"),
     sex: yup.number().required("Sex required").min(0, "Must between 0 1").max(1, "Must between 0 1"),
+});
+exports.UpdateUserSchema = yup.object().shape({
+    password: yup.string().nullable(),
+    phone: yup.string().nullable().matches(constants_1.VALIDATION_PHONE_REGEX, "Phone wrong format"),
+    name: yup.string().nullable(),
+    sex: yup.number().nullable().min(0, "Must between 0 1").max(1, "Must between 0 1"),
 });

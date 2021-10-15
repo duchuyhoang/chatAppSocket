@@ -55,7 +55,8 @@ export class MessageDao extends BaseDao {
   public getMessageByConversation(id_conversation: string) {
     return new Promise<IQueryMessage[]>((resolve, reject) => {
       this.db.query(
-        `SELECT message.id_message,message.content,message.createAt as message_create_at,message.id_user,message.delFlag as message_del_flag,
+        `SELECT message.id_message,message.content,message.createAt as message_create_at,
+        message.id_user,message.delFlag as message_del_flag,
 message.id_conversation,message.type,message.updateAt,message.url,message.id_icon,user.email,
 user.phone,user.name,user.delFlag,user.avatar,user.createAt,user.sex,user.lastSeen
 FROM message INNER JOIN user ON message.id_user=user.id_user AND id_conversation=?`,
