@@ -4,11 +4,35 @@ import {
   imageFolder,
   serverAddress,
   HOST_NAME,
+  UNAUTHORIZED,
 } from "../common/constants";
 import { randomId, getExtension } from "../common/functions";
+import { UserInConversationDao } from "../Dao/UserInConversationDao";
+import { DecodedUser } from "../models/User";
 import { IconCreateRequest, IconInfo } from "../TS/File";
-import fs from "fs";
-import path from "path";
+
+const checkUserExist = async (
+  req: IconCreateRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id_conversation = null } = req.params;
+  const userInfo: DecodedUser = res.locals.decodeToken;
+  try {
+    const userInConversationDao = new UserInConversationDao();
+    const isUserExist =
+      await userInConversationDao.checkUserExistInConversation(
+        userInfo.id_user.toString(),
+        id_conversation || ""
+      );
+      console.log(isUserExist);
+      
+    if (isUserExist) next();
+    else res.status(UNAUTHORIZED).json({ message: "Unauthorized" });
+  } catch (err) {
+    res.status(UNAUTHORIZED).json({ message: "Unauthorized" });
+  }
+};
 
 function handleRenameIconFile(
   req: Request,
@@ -22,19 +46,19 @@ function handleRenameIconFile(
 
   const imgId = randomId(50);
 
-//   fs.rename(
-//     path.join(__dirname, destination + file.originalname),
-//     path.join(__dirname, destination + newName),
-//     (err) => {}
-//   );
+  //   fs.rename(
+  //     path.join(__dirname, destination + file.originalname),
+  //     path.join(__dirname, destination + newName),
+  //     (err) => {}
+  //   );
 
   return {
-    originalFile:file,
+    originalFile: file,
     imgId,
     imgLink,
     newName,
-    mimetype:file.mimetype,
-    buffer:file.buffer
+    mimetype: file.mimetype,
+    buffer: file.buffer,
   };
 }
 
@@ -71,4 +95,4 @@ const handleChangeIconName = (
   // res.status(200).json({ status: 200, message: "Ok" });
 };
 
-export { handleRenameIconFile, handleChangeIconName };
+export { handleRenameIconFile, handleChangeIconName,checkUserExist };

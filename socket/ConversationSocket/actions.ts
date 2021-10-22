@@ -67,7 +67,6 @@ export const RoomSocketActions = {
     listUser: string[],
     newConversation: ConversationWithCreatorInfo
   ) => {
-    let matchedSocket: Socket[] = [];
     namespace.sockets.forEach((socket: Socket) => {
       const userInfo: DecodedUser = socket.data.decode;
       if (listUser.indexOf(userInfo.id_user.toString()) != 1) {
@@ -79,18 +78,47 @@ export const RoomSocketActions = {
         );
 
         // Emit to all matched socket to join new room
-        // console.log("c",namespace.in(socket.id));
-
-        // console.log("c",namespace.in(SOCKET_NAMESPACE.CONVERSATION+"#"+socket.id));
         namespace
-           .in(socket.id)
+          .in(socket.id)
           .emit(SOCKET_EMIT_ACTIONS.JOIN_NEW_ROOM, newConversation);
       }
     });
+  },
 
-    // listUser.forEach((idUser:string)=>{
-    //   namespace.to(userSocket[SOCKET_PREFIX.USER+idUser]).emit
-    // })
+  joinPrivateRoom: (
+    namespace: Namespace,
+    listUser: string[],
+    newConversation: ConversationWithCreatorInfo
+  ) => {
+    namespace.sockets.forEach((socket: Socket) => {
+      const userInfo: DecodedUser = socket.data.decode;
+      if (listUser.indexOf(userInfo.id_user.toString()) != 1) {
+        // Join new room
+        socket.join(SOCKET_PREFIX.CONVERSATION + newConversation.id_room);
+        // update list user and their room
+        userInRoom[SOCKET_PREFIX.USER + userInfo.id_user].push(
+          SOCKET_PREFIX.CONVERSATION + newConversation.id_room
+        );
+      }
+    });
+  },
+
+  emitSeenMessageEvent: (
+    namespace: Namespace,
+    id_conversation: string,
+    userInfo: DecodedUser,
+    id_message: string
+  ) => {
+    const { id_user, avatar, name } = userInfo;
+    namespace
+      .to(SOCKET_PREFIX.CONVERSATION + id_conversation.toString())
+      .emit(SOCKET_EMIT_ACTIONS.EMIT_SEEN_MESSAGE, {
+        id_user,
+        avatar,
+        name,
+        id_message,
+        id_conversation,
+      });
   },
 
   emitMessageToConversation: (
@@ -160,6 +188,12 @@ export const RoomSocketActions = {
         });
     }
   },
+
+  // joinRoom(namespace:Namespace,id_user:string,id_conversation:string){
+
+  // if(userSocket[SOCKET_PREFIX.USER+id_user])
+  // namespace.in(userSocket[SOCKET_PREFIX.USER+id_user]).socketsJoin(SOCKET_PREFIX.CONVERSATION+id_conversation)
+  // },
 
   leaveConversation: async () => {},
 };

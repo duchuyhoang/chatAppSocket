@@ -45,7 +45,6 @@ exports.RoomSocketActions = {
         socket.join(constants_1.SOCKET_PREFIX.CONVERSATION + id_conversation.toString());
     }),
     handleRoomGroup: (namespace, listUser, newConversation) => __awaiter(void 0, void 0, void 0, function* () {
-        let matchedSocket = [];
         namespace.sockets.forEach((socket) => {
             const userInfo = socket.data.decode;
             if (listUser.indexOf(userInfo.id_user.toString()) != 1) {
@@ -54,17 +53,35 @@ exports.RoomSocketActions = {
                 // update list user and their room
                 userInRoom[constants_1.SOCKET_PREFIX.USER + userInfo.id_user].push(constants_1.SOCKET_PREFIX.CONVERSATION + newConversation.id_room);
                 // Emit to all matched socket to join new room
-                // console.log("c",namespace.in(socket.id));
-                // console.log("c",namespace.in(SOCKET_NAMESPACE.CONVERSATION+"#"+socket.id));
                 namespace
                     .in(socket.id)
                     .emit(constants_1.SOCKET_EMIT_ACTIONS.JOIN_NEW_ROOM, newConversation);
             }
         });
-        // listUser.forEach((idUser:string)=>{
-        //   namespace.to(userSocket[SOCKET_PREFIX.USER+idUser]).emit
-        // })
     }),
+    joinPrivateRoom: (namespace, listUser, newConversation) => {
+        namespace.sockets.forEach((socket) => {
+            const userInfo = socket.data.decode;
+            if (listUser.indexOf(userInfo.id_user.toString()) != 1) {
+                // Join new room
+                socket.join(constants_1.SOCKET_PREFIX.CONVERSATION + newConversation.id_room);
+                // update list user and their room
+                userInRoom[constants_1.SOCKET_PREFIX.USER + userInfo.id_user].push(constants_1.SOCKET_PREFIX.CONVERSATION + newConversation.id_room);
+            }
+        });
+    },
+    emitSeenMessageEvent: (namespace, id_conversation, userInfo, id_message) => {
+        const { id_user, avatar, name } = userInfo;
+        namespace
+            .to(constants_1.SOCKET_PREFIX.CONVERSATION + id_conversation.toString())
+            .emit(constants_1.SOCKET_EMIT_ACTIONS.EMIT_SEEN_MESSAGE, {
+            id_user,
+            avatar,
+            name,
+            id_message,
+            id_conversation,
+        });
+    },
     emitMessageToConversation: (namespace, id_conversation, data) => {
         namespace
             .in(constants_1.SOCKET_PREFIX.CONVERSATION + id_conversation.toString())
@@ -117,5 +134,9 @@ exports.RoomSocketActions = {
             });
         }
     },
+    // joinRoom(namespace:Namespace,id_user:string,id_conversation:string){
+    // if(userSocket[SOCKET_PREFIX.USER+id_user])
+    // namespace.in(userSocket[SOCKET_PREFIX.USER+id_user]).socketsJoin(SOCKET_PREFIX.CONVERSATION+id_conversation)
+    // },
     leaveConversation: () => __awaiter(void 0, void 0, void 0, function* () { }),
 };

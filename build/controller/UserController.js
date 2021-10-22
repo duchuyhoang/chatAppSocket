@@ -22,6 +22,7 @@ class UserController {
         this.searchUserByEmailOrPhone = this.searchUserByEmailOrPhone.bind(this);
         this.viewRelationshipStatus = this.viewRelationshipStatus.bind(this);
         this.editUser = this.editUser.bind(this);
+        this.getUserById = this.getUserById.bind(this);
     }
     getUserFriend(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -44,10 +45,10 @@ class UserController {
             }
             else {
             }
-            const { email = null, phone = null } = req.query;
+            const { keyword = null } = req.query;
             const userInfo = res.locals.decodeToken;
             try {
-                const result = yield this.UserDao.searchUserByEmailOrPhone(email, phone, userInfo.id_user.toString());
+                const result = yield this.UserDao.searchUserByEmailOrPhone((keyword === null || keyword === void 0 ? void 0 : keyword.toString()) || "", userInfo.id_user.toString());
                 // result.map((user)=>{
                 //   delete
                 // })
@@ -61,7 +62,7 @@ class UserController {
     }
     viewRelationshipStatus(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { id_friend } = req.query;
+            const { id_friend } = req.params;
             const userInfo = res.locals.decodeToken;
             if (!id_friend) {
                 res.status(constants_1.BAD_REQUEST).json({ message: "Id friend required" });
@@ -76,13 +77,32 @@ class UserController {
             }
         });
     }
+    getUserById(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id } = req.params;
+            const userInfo = res.locals.decodeToken;
+            try {
+                const result = yield this.UserDao.getUserInfoById(userInfo.id_user.toString(), (id === null || id === void 0 ? void 0 : id.toString()) || "");
+                res.json({ data: result });
+            }
+            catch (err) {
+                console.log(err);
+                (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
+            }
+        });
+    }
     editUser(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             const { password = null, phone = null, name = null, sex = null } = req.body;
             let avatar = null;
             const userInfo = res.locals.decodeToken;
             try {
-                const isValid = yield Authentication_1.UpdateUserSchema.validate({ password, phone, name, sex });
+                const isValid = yield Authentication_1.UpdateUserSchema.validate({
+                    password,
+                    phone,
+                    name,
+                    sex,
+                });
             }
             catch (err) {
                 (0, functions_1.throwValidateError)(err, next);
@@ -104,7 +124,6 @@ class UserController {
                 sex,
                 avatar,
             };
-            console.log(updatePayload);
             Object.keys(updatePayload).map((key) => {
                 if (!updatePayload[key])
                     delete updatePayload[key];
@@ -115,9 +134,12 @@ class UserController {
             }
             try {
                 let result = yield this.UserDao.updateUser(Object.assign(Object.assign({}, updatePayload), { id_user: userInfo.id_user.toString() }));
-                res.json({ message: "Ok" });
+                const newUser = yield this.UserDao.getCurrentUser(userInfo.id_user.toString());
+                res.json({ data: newUser });
             }
-            catch (error) { }
+            catch (error) {
+                (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
+            }
         });
     }
 }

@@ -19,7 +19,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ConversationCheckPrivateChatExistSchema = exports.ConversationCreatePrivateChatSchema = exports.ConversationCreateGroupChatSchema = void 0;
+exports.UpdateConversationLastSeenMessageSchema = exports.ConversationCheckPrivateChatExistSchema = exports.ConversationCreatePrivateChatSchema = exports.ConversationCreateGroupChatSchema = void 0;
 const yup = __importStar(require("yup"));
 exports.ConversationCreateGroupChatSchema = yup.object().shape({
     title: yup.string().required("Need title"),
@@ -42,5 +42,9 @@ exports.ConversationCreatePrivateChatSchema = yup.object().shape({
 });
 exports.ConversationCheckPrivateChatExistSchema = yup.object().shape({
     id_friend: yup.string().required("Must include a friend")
+});
+exports.UpdateConversationLastSeenMessageSchema = yup.object().shape({
+    id_room: yup.string().required("Must include a room"),
+    id_message: yup.string().required("Must include a message")
 });
 // expot const ConversationGetMessageSchema

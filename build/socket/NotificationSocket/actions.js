@@ -35,4 +35,5 @@ exports.NotificationSocketActions = {
             namespace.in(room).emit(constants_1.SOCKET_EMIT_ACTIONS.EMIT_NOTIFICATION, data);
         });
     },
+    // handleFriendRequestSuccess(namespace:Namespace,)
 };

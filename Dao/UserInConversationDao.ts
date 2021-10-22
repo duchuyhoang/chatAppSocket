@@ -84,11 +84,32 @@ export class UserInConversationDao extends BaseDao {
   getAllConversationUser(id_room: string) {
     return new Promise<UserInConversation[]>((resolve, reject) => {
       this.db.query(
-        `SELECT * FROM user_in_conversation WHERE id_room=? AND status=${USER_IN_ROOM_STATUS.NORMAL}`,
+        `SELECT user_in_conversation.*,
+        user.phone,user.name,user.delFlag,user.avatar,user.createAt,user.sex,user.lastSeen 
+        FROM user_in_conversation 
+        INNER JOIN user ON user_in_conversation.id_user=user.id_user
+        WHERE id_room=? AND status=${USER_IN_ROOM_STATUS.NORMAL}
+        
+        `,
         [id_room],
         (err, result) => {
           if (err) reject(err);
           else resolve(result);
+        }
+      );
+    });
+  }
+  checkUserExistInConversation(id_user: string, id_room: string) {
+    return new Promise<boolean>((resolve, reject) => {
+      this.db.query(
+        `SELECT * FROM user_in_conversation WHERE id_user=? AND id_room=? AND status=${USER_IN_ROOM_STATUS.NORMAL}`,
+        [id_user,id_room],
+        (err, result) => {   
+          if (err) reject(err);
+          else {
+            if (result.length !== 0) resolve(true);
+            else resolve(false);
+          }
         }
       );
     });

@@ -6,6 +6,7 @@ import authenticationRouter from "./router/authenticate";
 import conversationRouter from "./router/conversationRouter";
 import userRouter from "./router/userRouter";
 import messageRouter from "./router/messageRouter";
+import notifcationRouter from "./router/notificationRouter";
 import multer from "multer";
 const bodyParser = require("body-parser");
 import cors from "cors";
@@ -83,7 +84,7 @@ io.sockets.on("connection", (socket:Socket) => {
   // });
 
 
-  socket.once(SOCKET_ON_ACTIONS.ON_AUTHENTICATE, (data) => {  
+  socket.once(SOCKET_ON_ACTIONS.ON_AUTHENTICATE, (data) => {   
     jwt.verify(
       data.token,
       process.env.TOKEN_SECRET as string,
@@ -120,8 +121,8 @@ app.use("/upload", uploadRouter);
 app.use("/authen", authenticationRouter);
 app.use("/user", userRouter);
 app.use("/conversation", conversationRouter);
-app.use("/message",messageRouter)
-
+app.use("/message",messageRouter);
+app.use("/notification",notifcationRouter);
 // localhost:300/authen/signup
 
 app.get("/cook", (req, res) => {

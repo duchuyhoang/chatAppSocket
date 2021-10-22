@@ -11,11 +11,12 @@ const userRouter = express_1.default.Router();
 userRouter.get("/friendList", authenticate_1.verifyToken, new UserController_1.UserController().getUserFriend);
 userRouter.get("/searchUser", authenticate_1.verifyToken, new UserController_1.UserController().searchUserByEmailOrPhone);
 userRouter.get("/getListFriend", authenticate_1.verifyToken, new UserController_1.UserController().getUserFriend);
-userRouter.get("/checkRelationshipBetween", authenticate_1.verifyToken, new UserController_1.UserController().viewRelationshipStatus);
+userRouter.get("/checkRelationshipBetween/:id_friend", authenticate_1.verifyToken, new UserController_1.UserController().viewRelationshipStatus);
 userRouter.post("/editUser", authenticate_1.verifyToken, multer_1.imageUpload.fields([
     {
         name: "singleImage",
         maxCount: 1,
     },
 ]), multer_1.handleUploadFile, new UserController_1.UserController().editUser);
+userRouter.get("/getUserById/:id", authenticate_1.verifyToken, new UserController_1.UserController().getUserById);
 exports.default = userRouter;

@@ -17,7 +17,7 @@ userRouter.get(
 );
 
 userRouter.get(
-  "/checkRelationshipBetween",
+  "/checkRelationshipBetween/:id_friend",
   verifyToken,
   new UserController().viewRelationshipStatus
 );
@@ -33,4 +33,8 @@ userRouter.post(
   handleUploadFile,
   new UserController().editUser
 );
+
+userRouter.get("/getUserById/:id",verifyToken,new UserController().getUserById);
+
+
 export default userRouter;

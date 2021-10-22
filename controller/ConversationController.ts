@@ -13,24 +13,33 @@ import {
   ConversationCreatePrivateChatSchema,
   ConversationCheckPrivateChatExistSchema,
 } from "../validations/Conversation";
-import { BAD_REQUEST, DB_ERROR, SOCKET_LIST, SOCKET_NAMESPACE } from "../common/constants";
+import {
+  BAD_REQUEST,
+  DB_ERROR,
+  SOCKET_LIST,
+  SOCKET_NAMESPACE,
+} from "../common/constants";
 import { DecodedUser } from "../models/User";
 import { ConversationWithCreatorInfo } from "../TS/Conversation";
 import { RoomSocketActions } from "../socket/ConversationSocket/actions";
 import { Namespace } from "socket.io";
-
+import { UserLastSeenMessageDao } from "../Dao/UserLastSeenMessageDao";
+import { Maybe } from "yup/lib/types";
 
 export class ConversationController {
   private conversationDao: ConversationDao;
   private userInConversationDao: UserInConversationDao;
+  private userLastSeenMessageDao: UserLastSeenMessageDao;
   constructor() {
     this.conversationDao = new ConversationDao();
     this.userInConversationDao = new UserInConversationDao();
+    this.userLastSeenMessageDao = new UserLastSeenMessageDao();
     this.createGroupConversation = this.createGroupConversation.bind(this);
     this.createPrivateConversation = this.createPrivateConversation.bind(this);
     this.checkPrivateConversationBetween =
       this.checkPrivateConversationBetween.bind(this);
     this.getConversations = this.getConversations.bind(this);
+    this.getConversationById = this.getConversationById.bind(this);
   }
 
   public async checkPrivateConversationBetween(
@@ -89,10 +98,10 @@ export class ConversationController {
           title,
           userInfo.id_user
         );
-      const parseListUser = JSON.parse(list_user);
+      const parseListUser: string[] = JSON.parse(list_user);
 
-      parseListUser.indexOf(parseInt(userInfo.id_user)) === -1 &&
-        parseListUser.push(parseInt(userInfo.id_user));
+      parseListUser.indexOf(userInfo.id_user) === -1 &&
+        parseListUser.push(userInfo.id_user);
 
       const data = forBulkInsert<{ id_user: string }>(
         parseListUser.map((id_user: string) => {
@@ -105,39 +114,44 @@ export class ConversationController {
 
       await this.userInConversationDao.addUsersToConversation(data);
 
-const newConversation:ConversationWithCreatorInfo|null=await this.conversationDao.getConversationById(newIdRoom.toString());
+      const newConversation: ConversationWithCreatorInfo | null =
+        await this.conversationDao.getConversationById(newIdRoom.toString());
 
-if(newConversation){
-  this.emitJoinRoom(req,parseListUser,newConversation)
-}
+      if (newConversation) {
+        this.emitJoinRoom(req, parseListUser, newConversation);
 
-      res.json({ newIdRoom: newIdRoom });
-    } catch (error) {   
+        // this.userLastSeenMessageDao.
+        const listUserToConversation = [
+          ...parseListUser.map((id) =>
+            this.userLastSeenMessageDao.addUserToRoom(newIdRoom.toString(), id)
+          ),
+        ];
+        await Promise.all([listUserToConversation]);
+      }
+
+      res.json({ newRoom: newConversation });
+    } catch (error) {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
       return;
     }
   }
 
+  private emitJoinRoom(
+    req: Request,
+    listUser: string[],
+    newConversation: ConversationWithCreatorInfo
+  ) {
+    const conversationSocket: Namespace =
+      req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.CONVERSATION];
 
-private emitJoinRoom(req: Request,
-  listUser: string[],
-  newConversation:ConversationWithCreatorInfo
-  ){
-    const conversationSocket: Namespace =req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.CONVERSATION];
-
-if(conversationSocket){
- RoomSocketActions.handleRoomGroup(conversationSocket,listUser,newConversation)
-}
-
-
-
-    
-
-
-    
-
-}
-
+    if (conversationSocket) {
+      RoomSocketActions.handleRoomGroup(
+        conversationSocket,
+        listUser,
+        newConversation
+      );
+    }
+  }
 
   public async createPrivateConversation(
     req: Request,
@@ -161,6 +175,47 @@ if(conversationSocket){
           abortEarly: false,
         }
       );
+
+      try {
+        const { insertId: newIdRoom }: OkPacket =
+          await this.conversationDao.addNewPrivateConversation(
+            userInfo.id_user.toString()
+          );
+
+        const data = forBulkInsert<{ id_user: string }>(
+          [{ id_user: id_friend }, { id_user: userInfo.id_user.toString() }],
+          newIdRoom.toString()
+        );
+
+        await this.userInConversationDao.addUsersToConversation(data);
+
+        const newConversation: ConversationWithCreatorInfo | null =
+          await this.conversationDao.getConversationById(newIdRoom.toString());
+
+        if (newConversation) {
+          const conversationSocket: Namespace =
+            req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.CONVERSATION];
+
+          if (conversationSocket) {
+            RoomSocketActions.joinPrivateRoom(
+              conversationSocket,
+              [userInfo.id_user.toString(), id_friend],
+              newConversation
+            );
+          }
+
+          const listUserToConversation = [
+            ...[userInfo.id_user.toString(), id_friend].map((id) =>
+              this.userLastSeenMessageDao.addUserToRoom(
+                newIdRoom.toString(),
+                id
+              )
+            ),
+          ];
+          await Promise.all([listUserToConversation]);
+        }
+        res.json({ newRoom: newConversation });
+      } catch (error) {}
     } catch (error: any) {
       throwValidateError(error, next);
       return;
@@ -200,6 +255,45 @@ if(conversationSocket){
     }
   }
 
+  public async getConversationById(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    const { id_conversation = null } = req.params;
+
+    if (!id_conversation) {
+      throwNormalError("Conversation required", next);
+      return;
+    }
+
+    try {
+      const conversationInfo: Maybe<ConversationWithCreatorInfo> =
+        await this.conversationDao.getConversationById(
+          id_conversation.toString()
+        );
+      if (!conversationInfo) {
+        res.json({
+          conversationInfo,
+          listUser: null,
+        });
+      } else {
+        const listUserInRoom =
+          await this.userInConversationDao.getAllConversationUser(
+            id_conversation.toString()
+          );
+        res.json({
+          conversationInfo,
+          listUser: listUserInRoom,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+
+      throwHttpError(DB_ERROR, BAD_REQUEST, next);
+    }
+  }
+
   public async getConversations(
     req: Request,
     res: Response,
@@ -214,7 +308,7 @@ if(conversationSocket){
         );
       res.json({ data: listConversations });
     } catch (error) {
-      console.log(error);      
+      console.log(error);
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
   }

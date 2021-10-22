@@ -26,7 +26,8 @@ export class UserController {
     this.getUserFriend = this.getUserFriend.bind(this);
     this.searchUserByEmailOrPhone = this.searchUserByEmailOrPhone.bind(this);
     this.viewRelationshipStatus = this.viewRelationshipStatus.bind(this);
-    this.editUser=this.editUser.bind(this);
+    this.editUser = this.editUser.bind(this);
+    this.getUserById=this.getUserById.bind(this);
   }
 
   public async getUserFriend(req: Request, res: Response, next: NextFunction) {
@@ -50,13 +51,12 @@ export class UserController {
       const namespace2: Namespace = socketList["/CONVERSATION"];
     } else {
     }
-    const { email = null, phone = null } = req.query;
+    const { keyword = null } = req.query;
     const userInfo: DecodedUser = res.locals.decodeToken;
 
     try {
       const result = await this.UserDao.searchUserByEmailOrPhone(
-        email as Maybe<string>,
-        phone as Maybe<string>,
+        keyword?.toString() || "",
         userInfo.id_user.toString()
       );
 
@@ -76,7 +76,7 @@ export class UserController {
     res: Response,
     next: NextFunction
   ) {
-    const { id_friend } = req.query;
+    const { id_friend } = req.params;
     const userInfo: DecodedUser = res.locals.decodeToken;
     if (!id_friend) {
       res.status(BAD_REQUEST).json({ message: "Id friend required" });
@@ -94,13 +94,31 @@ export class UserController {
     }
   }
 
+  public async getUserById(req: Request, res: Response, next: NextFunction) {
+    const {id} = req.params;
+    const userInfo: DecodedUser = res.locals.decodeToken;
+    try {
+      const result = await this.UserDao.getUserInfoById(userInfo.id_user.toString(),id?.toString()||"");   
+      res.json({ data: result });
+    } catch (err) {
+      console.log(err);
+      
+      throwHttpError(DB_ERROR, BAD_REQUEST, next);
+    }
+  }
+
   public async editUser(req: Request, res: Response, next: NextFunction) {
     const { password = null, phone = null, name = null, sex = null } = req.body;
     let avatar = null;
     const userInfo: DecodedUser = res.locals.decodeToken;
 
     try {
-      const isValid = await UpdateUserSchema.validate({ password, phone, name, sex });
+      const isValid = await UpdateUserSchema.validate({
+        password,
+        phone,
+        name,
+        sex,
+      });
     } catch (err: any) {
       throwValidateError(err, next);
       return;
@@ -123,8 +141,6 @@ export class UserController {
       avatar,
     };
 
-    console.log(updatePayload);
-
     Object.keys(updatePayload).map((key: string) => {
       if (!updatePayload[key]) delete updatePayload[key];
     });
@@ -139,7 +155,10 @@ export class UserController {
         ...updatePayload,
         id_user: userInfo.id_user.toString(),
       });
-      res.json({ message: "Ok" });
-    } catch (error) {}
+      const newUser=await this.UserDao.getCurrentUser(userInfo.id_user.toString());
+      res.json({ data: newUser });
+    } catch (error) {
+      throwHttpError(DB_ERROR, BAD_REQUEST, next);
+    }
   }
 }

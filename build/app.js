@@ -11,6 +11,7 @@ const authenticate_1 = __importDefault(require("./router/authenticate"));
 const conversationRouter_1 = __importDefault(require("./router/conversationRouter"));
 const userRouter_1 = __importDefault(require("./router/userRouter"));
 const messageRouter_1 = __importDefault(require("./router/messageRouter"));
+const notificationRouter_1 = __importDefault(require("./router/notificationRouter"));
 const bodyParser = require("body-parser");
 const cors_1 = __importDefault(require("cors"));
 const path_1 = __importDefault(require("path"));
@@ -99,6 +100,7 @@ app.use("/authen", authenticate_1.default);
 app.use("/user", userRouter_1.default);
 app.use("/conversation", conversationRouter_1.default);
 app.use("/message", messageRouter_1.default);
+app.use("/notification", notificationRouter_1.default);
 // localhost:300/authen/signup
 app.get("/cook", (req, res) => {
     res.cookie("cook", "hyy").json({ name: req.hostname });

@@ -1,6 +1,7 @@
 import { OkPacket } from "mysql";
+import { Maybe } from "yup/lib/types";
 import { DEL_FLAG, FRIEND_STATUS } from "../common/constants";
-import { User, IFriend, IUpdateUser } from "../models/User";
+import { User, IFriend, IUpdateUser,IUserWithFriendshipStatus, DecodedUser } from "../models/User";
 import { BaseDao } from "./BaseDao";
 
 const queryInfoString =
@@ -13,21 +14,18 @@ export class UserDao extends BaseDao {
     super();
   }
 
-  public searchUserByEmailOrPhone(
-    email: string | null,
-    phone: string | null,
-    id_user: string
-  ) {
+  public searchUserByEmailOrPhone(keyword: Maybe<string>, id_user: string) {
     return new Promise<
-      (Omit<User, "password"> & { friend_status: FRIEND_STATUS })[]
+    IUserWithFriendshipStatus[]
     >((resolve, reject) => {
-      this.db.query(
+      const query = this.db.query(
         `
-        SELECT selected.*,user_has_friend.* FROM (SELECT ${queryInfoString} FROM user WHERE email LIKE CONCAT('%', ?,  '%') OR phone LIKE CONCAT('%', ?,  '%' AND id_user != ?) AND delFlag=${DEL_FLAG.VALID})
+        SELECT selected.*,user_has_friend.status as friendStatus,check_can_make_friend_request(?,selected.id_user) as can_make_friend_request 
+        FROM (SELECT ${queryInfoString} FROM user WHERE (email LIKE CONCAT('%', ?,  '%') OR phone LIKE CONCAT('%', ?,  '%')) AND delFlag=${DEL_FLAG.VALID} AND id_user!=?)
         as selected LEFT JOIN user_has_friend ON (selected.id_user=user_has_friend.id_user or selected.id_user=user_has_friend.id_friend) 
-        AND(user_has_friend.id_user=?)
+        AND(user_has_friend.id_user=? OR user_has_friend.id_friend=?) 
         `,
-        [email, phone, id_user, id_user, id_user],
+        [id_user, keyword, keyword, id_user, id_user, id_user, id_user,id_user],
         (err, result) => {
           if (err) reject(err);
           else
@@ -86,8 +84,25 @@ AND user_has_friend.id_friend=? AND status=${FRIEND_STATUS.FRIEND} AND delFlag=$
     });
   }
 
-  public updateUser(payload: Partial<IUpdateUser> ) {
-    const { id_user,...rest } = payload;
+  public getUserInfoById(id_user: string,id_friend:string) {
+    return new Promise<IUserWithFriendshipStatus|null>((resolve, reject) => {
+      this.db.query(
+        `
+        SELECT selected.*,user_has_friend.status as friendStatus,check_can_make_friend_request(?,selected.id_user) as can_make_friend_request 
+        FROM (SELECT ${queryInfoString} FROM user WHERE delFlag=${DEL_FLAG.VALID} AND id_user=?)
+        as selected LEFT JOIN user_has_friend ON (selected.id_user=user_has_friend.id_user or selected.id_user=user_has_friend.id_friend) 
+        AND(user_has_friend.id_user=?) LIMIT 1`,
+        [id_user, id_friend, id_user],
+        (err, result)=>{
+          if(err) reject(err);
+          else resolve(result[0]||null);
+        }
+      );
+    });
+  }
+
+  public updateUser(payload: Partial<IUpdateUser>) {
+    const { id_user, ...rest } = payload;
     return new Promise<OkPacket>((resolve, reject) => {
       this.db.query(
         `UPDATE user SET ? WHERE id_user=?`,
@@ -97,6 +112,19 @@ AND user_has_friend.id_friend=? AND status=${FRIEND_STATUS.FRIEND} AND delFlag=$
           else {
             resolve(result);
           }
+        }
+      );
+    });
+  }
+  public getCurrentUser(id_user:string){
+    return new Promise<DecodedUser>((resolve, reject) => {
+      this.db.query(
+        `
+       SELECT ${queryInfoString} FROM user WHERE delFlag=${DEL_FLAG.VALID} AND id_user=? LIMIT 1`,
+        [id_user],
+        (err, result)=>{
+          if(err) reject(err);
+          else resolve(result[0]||null);
         }
       );
     });

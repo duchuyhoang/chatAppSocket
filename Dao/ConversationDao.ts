@@ -37,7 +37,7 @@ export class ConversationDao extends BaseDao {
   }
 
   public getConversationByUser(id_user: string) {
-    return new Promise<ConversationWithCreatorInfo[]>((resolve, reject) => {    
+    return new Promise<ConversationWithCreatorInfo[]>((resolve, reject) => {
       this.db.query(
         `SELECT conversation.*,user.name as creator_name,
 user.email as creator_email,user.avatar as creator_avatar,user.phone as creator_phone,
@@ -62,8 +62,8 @@ WHERE conversation.delFlag=${DEL_FLAG.VALID} AND user_in_conversation.id_user=?`
       (resolve, reject) => {
         this.db.query(
           `SELECT conversation.*,
-          user.name as creator_name,
-user.email as creator_email,user.avatar as creator_avatar,user.phone as creator_phone,
+          user.name as creator_name,user.email as creator_email,
+          user.avatar as creator_avatar,user.phone as creator_phone,
 get_count_message(conversation.id_room) as message_count,
 get_last_message(conversation.id_room) as last_message
 FROM conversation 
