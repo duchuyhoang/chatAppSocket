@@ -56,5 +56,21 @@ public signup(userInfo:Omit<User,"id_user"|"delFlag"|"createAt"|"lastSeen"> & {p
   })
 }
 
-
+public reLogin(id_user:string){
+  return new Promise<User | null>((resolve, reject) => {
+    this.db.query(
+      `SELECT * FROM user WHERE id_user=? and delFlag=${DEL_FLAG.VALID} LIMIT 1`,
+      [id_user],
+      (err, result) => {
+        if (err) return reject(err);
+        if (result.length === 0) {
+          resolve(null);
+        } else {
+          const selectedUser: User = result[0];
+          resolve(selectedUser);
+        }
+      }
+    );
+  });
+}
 }

@@ -137,37 +137,46 @@ class AuthenticationController {
             const oldTokenInfo = res.locals.decodeToken || null;
             if (oldTokenInfo) {
                 const { exp, tokenExpireTime, iat } = oldTokenInfo, rest = __rest(oldTokenInfo, ["exp", "tokenExpireTime", "iat"]);
-                const accessToken = (0, functions_1.generateAccessToken)(Object.assign({}, rest));
-                res.json({
-                    accessToken: accessToken,
-                });
+                const userInfo = yield this.authenticationDao.reLogin(oldTokenInfo.id_user);
+                if (userInfo) {
+                    const { password } = userInfo, rest = __rest(userInfo, ["password"]);
+                    const accessToken = (0, functions_1.generateAccessToken)(Object.assign({}, rest));
+                    res.json({
+                        accessToken: accessToken,
+                    });
+                }
+                else {
+                    res.status(401).json({ message: "Unauthorized" });
+                }
             }
             else
                 res.status(401).json({ message: "Unauthorized" });
         });
     }
     refreshToken(req, res) {
-        const refreshToken = req.body.refresh_token || null;
-        if (refreshToken) {
-            jsonwebtoken_1.default.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET || "", (err, decode) => {
-                if (err) {
-                    res.status(401).json({ err });
-                }
-                else {
-                    const { id_user, email, phone, name, avatar } = decode;
-                    const accessToken = (0, functions_1.generateAccessToken)({
-                        id_user,
-                        email,
-                        phone,
-                        name,
-                        avatar,
-                    });
-                    res.status(200).json({ accessToken });
-                }
-            });
-        }
-        else
-            res.status(401).json({ message: "Unauthorized" });
+        return __awaiter(this, void 0, void 0, function* () {
+            const refreshToken = req.body.refresh_token || null;
+            if (refreshToken) {
+                jsonwebtoken_1.default.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET || "", (err, decode) => __awaiter(this, void 0, void 0, function* () {
+                    if (err) {
+                        res.status(401).json({ err });
+                    }
+                    else {
+                        const { id_user } = decode;
+                        const userInfo = yield this.authenticationDao.reLogin(id_user.toString());
+                        if (userInfo) {
+                            const { password } = userInfo, rest = __rest(userInfo, ["password"]);
+                            const accessToken = (0, functions_1.generateAccessToken)(Object.assign({}, rest));
+                            res.status(200).json({ accessToken });
+                        }
+                        else
+                            res.status(401).json({ message: "Unauthorized" });
+                    }
+                }));
+            }
+            else
+                res.status(401).json({ message: "Unauthorized" });
+        });
     }
 }
 exports.AuthenticationController = AuthenticationController;

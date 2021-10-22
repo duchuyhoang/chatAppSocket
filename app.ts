@@ -27,7 +27,7 @@ import {
 } from "./common/constants";
 
 // import { socketVerifyToken } from "./middlewares/authenticate";
-import { socketManager } from "./socket";
+import { socketManager,SocketWithoutAuthenticate } from "./socket";
 import jwt from "jsonwebtoken";
 import { bindSocketData } from "./middlewares/authenticate";
 const app: Express = express();
@@ -63,9 +63,10 @@ const io = new SocketServer(server, {
 //   console.log("d",getCount());
 // })
 
-
+SocketWithoutAuthenticate(io);
 
 io.sockets.on("connection", (socket:Socket) => {
+  
   // const socketList = io._nsps.forEach((nsp) => {
   //   nsp.on("connect", function (socket) {
   //     jwt.verify(

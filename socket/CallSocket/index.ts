@@ -12,31 +12,53 @@ type CallConversationType = {
 
 export const CallSocket = (namespace: Namespace) => {
   namespace
-    .off("connection", () => {})
+    // .off("connection", () => {})
     .on("connection", (socket: Socket) => {
-      socket.on(SOCKET_ON_ACTIONS.ON_GET_LIST_USER_IN_ROOM, async (id_room) => {
-        const socketList: string[] = [];
-        const socketSet = await namespace
-          .to(SOCKET_PREFIX.CALL + id_room)
-          .allSockets();
-        socketSet.forEach((value) => {
-          socketList.push(value);
-        });
-
-        socket.emit(SOCKET_EMIT_ACTIONS.EMIT_LIST_USER_RESPONSE, {
-          socketList,
-        });
-      });
 
       socket.on(
-        SOCKET_ON_ACTIONS.ON_SENDING_SIGNAL,
-        async ({ id_room, signal,receiverSockerId }) => {
-          namespace.to(receiverSockerId).emit(SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_OFFER, { signal })
-          // await socket.join(SOCKET_PREFIX.CALL + id_room);
-          // socket
-          //   .to(SOCKET_PREFIX.CALL + id_room)
-          //   .emit(SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_OFFER, { signal });
+        SOCKET_ON_ACTIONS.ON_GET_LIST_USER_IN_ROOM,
+        async ({ id_conversation }) => {
+          const socketList: string[] = [];
+          await socket.join(SOCKET_PREFIX.CALL_CHAT + id_conversation);
+          const socketSet = await namespace
+            .to(SOCKET_PREFIX.CALL_CHAT + id_conversation)
+            .allSockets();
+          socketSet.forEach((value) => {
+            if(value!=socket.id)
+            socketList.push(value);
+          });
+
+          socket.emit(SOCKET_EMIT_ACTIONS.EMIT_LIST_USER_RESPONSE, {
+            socketList,
+          });
         }
       );
+
+      // socket.on(
+      //   SOCKET_ON_ACTIONS.ON_SENDING_SIGNAL,
+      //   async ({ id_room, signal, receiverSockerId }) => {
+      //     namespace
+      //       .to(receiverSockerId)
+      //       .emit(SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_OFFER, { signal });
+         
+      //   }
+      // );
+
+      socket.on(
+        SOCKET_ON_ACTIONS.ON_SEND_OFFER_SIGNAL,
+        async ({ id_room, signal, receiverSockerId,stream,callerSocketId }) => {
+          namespace
+            .to(receiverSockerId)
+            .emit(SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_OFFER, { signal,callerSocketId });    
+        }
+      );
+      
+      socket.on(
+        SOCKET_ON_ACTIONS.ON_SEND_ANSWER_SIGNAL,
+        ({receiverSocketId,signal,callerSocketId})=>{
+          namespace.to(receiverSocketId).emit(SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_ANSWER,{signal,callerSocketId})
+        }
+      )
+
     });
 };

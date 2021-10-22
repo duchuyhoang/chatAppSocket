@@ -13,27 +13,38 @@ exports.CallSocket = void 0;
 const constants_1 = require("../../common/constants");
 const CallSocket = (namespace) => {
     namespace
-        .off("connection", () => { })
+        // .off("connection", () => {})
         .on("connection", (socket) => {
-        socket.on(constants_1.SOCKET_ON_ACTIONS.ON_GET_LIST_USER_IN_ROOM, (id_room) => __awaiter(void 0, void 0, void 0, function* () {
+        socket.on(constants_1.SOCKET_ON_ACTIONS.ON_GET_LIST_USER_IN_ROOM, ({ id_conversation }) => __awaiter(void 0, void 0, void 0, function* () {
             const socketList = [];
+            yield socket.join(constants_1.SOCKET_PREFIX.CALL_CHAT + id_conversation);
             const socketSet = yield namespace
-                .to(constants_1.SOCKET_PREFIX.CALL + id_room)
+                .to(constants_1.SOCKET_PREFIX.CALL_CHAT + id_conversation)
                 .allSockets();
             socketSet.forEach((value) => {
-                socketList.push(value);
+                if (value != socket.id)
+                    socketList.push(value);
             });
             socket.emit(constants_1.SOCKET_EMIT_ACTIONS.EMIT_LIST_USER_RESPONSE, {
                 socketList,
             });
         }));
-        socket.on(constants_1.SOCKET_ON_ACTIONS.ON_SENDING_SIGNAL, ({ id_room, signal, receiverSockerId }) => __awaiter(void 0, void 0, void 0, function* () {
-            namespace.to(receiverSockerId).emit(constants_1.SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_OFFER, { signal });
-            // await socket.join(SOCKET_PREFIX.CALL + id_room);
-            // socket
-            //   .to(SOCKET_PREFIX.CALL + id_room)
-            //   .emit(SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_OFFER, { signal });
+        // socket.on(
+        //   SOCKET_ON_ACTIONS.ON_SENDING_SIGNAL,
+        //   async ({ id_room, signal, receiverSockerId }) => {
+        //     namespace
+        //       .to(receiverSockerId)
+        //       .emit(SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_OFFER, { signal });
+        //   }
+        // );
+        socket.on(constants_1.SOCKET_ON_ACTIONS.ON_SEND_OFFER_SIGNAL, ({ id_room, signal, receiverSockerId, stream, callerSocketId }) => __awaiter(void 0, void 0, void 0, function* () {
+            namespace
+                .to(receiverSockerId)
+                .emit(constants_1.SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_OFFER, { signal, callerSocketId });
         }));
+        socket.on(constants_1.SOCKET_ON_ACTIONS.ON_SEND_ANSWER_SIGNAL, ({ receiverSocketId, signal, callerSocketId }) => {
+            namespace.to(receiverSocketId).emit(constants_1.SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_ANSWER, { signal, callerSocketId });
+        });
     });
 };
 exports.CallSocket = CallSocket;

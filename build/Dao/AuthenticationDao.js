@@ -47,5 +47,20 @@ class AuthenticationDao extends BaseDao_1.BaseDao {
             });
         });
     }
+    reLogin(id_user) {
+        return new Promise((resolve, reject) => {
+            this.db.query(`SELECT * FROM user WHERE id_user=? and delFlag=${constants_1.DEL_FLAG.VALID} LIMIT 1`, [id_user], (err, result) => {
+                if (err)
+                    return reject(err);
+                if (result.length === 0) {
+                    resolve(null);
+                }
+                else {
+                    const selectedUser = result[0];
+                    resolve(selectedUser);
+                }
+            });
+        });
+    }
 }
 exports.AuthenticationDao = AuthenticationDao;

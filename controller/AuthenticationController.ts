@@ -25,7 +25,7 @@ export class AuthenticationController {
     this.login = this.login.bind(this);
     this.signUp = this.signUp.bind(this);
     this.reLogin = this.reLogin.bind(this);
-    this.refreshToken=this.refreshToken.bind(this);
+    this.refreshToken = this.refreshToken.bind(this);
   }
 
   public async login(req: Request, res: Response, next: NextFunction) {
@@ -88,14 +88,13 @@ export class AuthenticationController {
       const isUserExist = await this.authenticationDao.checkUserExist(email);
       if (!isUserExist) {
         try {
-          if(res.locals.imageInfo){
+          if (res.locals.imageInfo) {
             const link = await uploadSingle({
               file: res.locals.imageInfo[0].originalFile,
               newName: res.locals.imageInfo[0].newName,
             });
             avatar = link;
           }
-         
         } catch (error) {}
 
         const insertRecord = await this.authenticationDao.signup({
@@ -132,34 +131,43 @@ export class AuthenticationController {
     const oldTokenInfo = res.locals.decodeToken || null;
     if (oldTokenInfo) {
       const { exp, tokenExpireTime, iat, ...rest } = oldTokenInfo;
-      const accessToken = generateAccessToken({ ...rest });
-      res.json({
-        accessToken: accessToken,
-      });
+      const userInfo = await this.authenticationDao.reLogin(
+        oldTokenInfo.id_user
+      );
+
+      if (userInfo) {
+        const { password, ...rest } = userInfo;
+        const accessToken = generateAccessToken({ ...rest });
+        res.json({
+          accessToken: accessToken,
+        });
+      } else {
+        res.status(401).json({ message: "Unauthorized" });
+      }
     } else res.status(401).json({ message: "Unauthorized" });
   }
 
-  public refreshToken(req: Request, res: Response) {
+  public async refreshToken(req: Request, res: Response) {
     const refreshToken = req.body.refresh_token || null;
     if (refreshToken) {
       jwt.verify(
         refreshToken,
         process.env.REFRESH_TOKEN_SECRET || "",
-        (err: any, decode: any) => {
+        async (err: any, decode: any) => {
           if (err) {
             res.status(401).json({ err });
           } else {
-            const { id_user, email, phone, name, avatar } =
-              decode as DecodedUser;
-
-            const accessToken = generateAccessToken({
-              id_user,
-              email,
-              phone,
-              name,
-              avatar,
-            });
-            res.status(200).json({ accessToken });
+            const { id_user } = decode as DecodedUser;
+            const userInfo = await this.authenticationDao.reLogin(
+              id_user.toString()
+            );
+            if (userInfo) {
+              const { password, ...rest } = userInfo;
+              const accessToken = generateAccessToken({
+                ...rest,
+              });
+              res.status(200).json({ accessToken });
+            } else res.status(401).json({ message: "Unauthorized" });
           }
         }
       );

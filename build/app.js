@@ -48,6 +48,7 @@ const io = new socket_io_1.Server(server, {
 // io.of("/TEST").on("connection",(socket:Socket)=>{
 //   console.log("d",getCount());
 // })
+(0, socket_1.SocketWithoutAuthenticate)(io);
 io.sockets.on("connection", (socket) => {
     // const socketList = io._nsps.forEach((nsp) => {
     //   nsp.on("connect", function (socket) {
