@@ -45,12 +45,6 @@ export class UserController {
     res: Response,
     next: NextFunction
   ) {
-    if (req.app.get(SOCKET_LIST)) {
-      // const socketList = req.app.get(SOCKET_LIST);
-      // const namespace: Namespace = req.app.get(SOCKET_LIST)["/USER"];
-      const namespace2: Namespace = socketList["/CONVERSATION"];
-    } else {
-    }
     const { keyword = null } = req.query;
     const userInfo: DecodedUser = res.locals.decodeToken;
 

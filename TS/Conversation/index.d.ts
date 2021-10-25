@@ -16,6 +16,7 @@ export interface ConversationWithCreatorInfo extends Conversation{
     creator_name:string
     creator_avatar:Maybe<string>
     creator_phone:string,
+    creator_sex:string,
     last_message:Maybe<string>
     message_count:int
 }

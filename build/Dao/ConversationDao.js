@@ -28,7 +28,7 @@ class ConversationDao extends BaseDao_1.BaseDao {
     getConversationByUser(id_user) {
         return new Promise((resolve, reject) => {
             this.db.query(`SELECT conversation.*,user.name as creator_name,
-user.email as creator_email,user.avatar as creator_avatar,user.phone as creator_phone,
+user.email as creator_email,user.avatar as creator_avatar,user.phone as creator_phone,user.sex as creator_sex,
 get_count_message(conversation.id_room) as message_count,get_last_message(conversation.id_room) as last_message
 FROM user_in_conversation 
 INNER JOIN conversation ON user_in_conversation.id_room=conversation.id_room 
@@ -46,7 +46,7 @@ WHERE conversation.delFlag=${constants_1.DEL_FLAG.VALID} AND user_in_conversatio
         return new Promise((resolve, reject) => {
             this.db.query(`SELECT conversation.*,
           user.name as creator_name,user.email as creator_email,
-          user.avatar as creator_avatar,user.phone as creator_phone,
+          user.avatar as creator_avatar,user.phone as creator_phone,user.sex as creator_sex,
 get_count_message(conversation.id_room) as message_count,
 get_last_message(conversation.id_room) as last_message
 FROM conversation 

@@ -13,7 +13,6 @@ exports.UserController = void 0;
 const constants_1 = require("../common/constants");
 const functions_1 = require("../common/functions");
 const UserDao_1 = require("../Dao/UserDao");
-const index_1 = require("../socket/index");
 const Authentication_1 = require("../validations/Authentication");
 class UserController {
     constructor() {
@@ -38,13 +37,6 @@ class UserController {
     }
     searchUserByEmailOrPhone(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (req.app.get(constants_1.SOCKET_LIST)) {
-                // const socketList = req.app.get(SOCKET_LIST);
-                // const namespace: Namespace = req.app.get(SOCKET_LIST)["/USER"];
-                const namespace2 = index_1.socketList["/CONVERSATION"];
-            }
-            else {
-            }
             const { keyword = null } = req.query;
             const userInfo = res.locals.decodeToken;
             try {

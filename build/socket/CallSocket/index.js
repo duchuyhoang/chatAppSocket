@@ -37,13 +37,31 @@ const CallSocket = (namespace) => {
         //       .emit(SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_OFFER, { signal });
         //   }
         // );
-        socket.on(constants_1.SOCKET_ON_ACTIONS.ON_SEND_OFFER_SIGNAL, ({ id_room, signal, receiverSockerId, stream, callerSocketId }) => __awaiter(void 0, void 0, void 0, function* () {
-            namespace
-                .to(receiverSockerId)
-                .emit(constants_1.SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_OFFER, { signal, callerSocketId });
-        }));
-        socket.on(constants_1.SOCKET_ON_ACTIONS.ON_SEND_ANSWER_SIGNAL, ({ receiverSocketId, signal, callerSocketId }) => {
-            namespace.to(receiverSocketId).emit(constants_1.SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_ANSWER, { signal, callerSocketId });
+        // socket.on(
+        //   SOCKET_ON_ACTIONS.ON_SEND_OFFER_SIGNAL,
+        //   async ({ id_room, signal, receiverSockerId,stream,callerSocketId }) => {
+        //     namespace
+        //       .to(receiverSockerId)
+        //       .emit(SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_OFFER, { signal,callerSocketId,stream });    
+        //   }
+        // );
+        // socket.on(
+        //   SOCKET_ON_ACTIONS.ON_SEND_ANSWER_SIGNAL,
+        //   ({receiverSocketId,signal,callerSocketId})=>{
+        //     namespace.to(receiverSocketId).emit(SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_ANSWER,{signal,callerSocketId})
+        //   }
+        // )
+        socket.on("request call", ({ peerId, callerSocketId, receiverSocket, userInfo }) => {
+            namespace.to(receiverSocket).emit("user joined", { callerSocketId, peerId, userInfo });
+        });
+        socket.on("socketLeave", ({ id_room, socketId }) => {
+            namespace.to(constants_1.SOCKET_PREFIX.CALL_CHAT + id_room).emit("user left", { socketId });
+        });
+        socket.on("make change", ({ id_room, socketId }) => {
+            namespace.to(constants_1.SOCKET_PREFIX.CALL_CHAT + id_room).emit("something change", { id_room, socketId });
+        });
+        socket.on("disconnect", () => {
+            // console.log("diss");
         });
     });
 };
