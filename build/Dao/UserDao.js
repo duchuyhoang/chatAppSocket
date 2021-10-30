@@ -15,7 +15,6 @@ exports.UserDao = void 0;
 const constants_1 = require("../common/constants");
 const BaseDao_1 = require("./BaseDao");
 const queryInfoString = "id_user,email,phone,name,delFlag,avatar,createAt,sex,lastSeen";
-const queryInfoStringWithUser = "user.id_user,user.email,user.phone,user.name,user.delFlag,user.avatar,user.createAt,user.sex,user.lastSeen";
 class UserDao extends BaseDao_1.BaseDao {
     constructor() {
         super();
@@ -40,9 +39,9 @@ class UserDao extends BaseDao_1.BaseDao {
     }
     getListFriend(id) {
         return new Promise((resolve, reject) => {
-            this.db.query(`SELECT ${queryInfoStringWithUser},user_has_friend.status as friendShipStatus,user_has_friend.updateAt FROM user INNER JOIN user_has_friend ON user.id_user=user_has_friend.id_friend 
+            this.db.query(`SELECT ${constants_1.queryInfoStringWithUser},user_has_friend.status as friendShipStatus,user_has_friend.updateAt FROM user INNER JOIN user_has_friend ON user.id_user=user_has_friend.id_friend 
 AND user_has_friend.id_user=? AND status=${constants_1.FRIEND_STATUS.FRIEND} AND delFlag=${constants_1.DEL_FLAG.VALID} UNION
-SELECT ${queryInfoStringWithUser},user_has_friend.status as friendShipStatus,user_has_friend.updateAt FROM user INNER JOIN user_has_friend ON user.id_user=user_has_friend.id_user 
+SELECT ${constants_1.queryInfoStringWithUser},user_has_friend.status as friendShipStatus,user_has_friend.updateAt FROM user INNER JOIN user_has_friend ON user.id_user=user_has_friend.id_user 
 AND user_has_friend.id_friend=? AND status=${constants_1.FRIEND_STATUS.FRIEND} AND delFlag=${constants_1.DEL_FLAG.VALID}
 `, [id, id], (err, result) => {
                 if (err)

@@ -1,13 +1,11 @@
 import { OkPacket } from "mysql";
 import { Maybe } from "yup/lib/types";
-import { DEL_FLAG, FRIEND_STATUS } from "../common/constants";
+import { DEL_FLAG, FRIEND_STATUS,queryInfoStringWithUser } from "../common/constants";
 import { User, IFriend, IUpdateUser,IUserWithFriendshipStatus, DecodedUser } from "../models/User";
 import { BaseDao } from "./BaseDao";
 
 const queryInfoString =
   "id_user,email,phone,name,delFlag,avatar,createAt,sex,lastSeen";
-const queryInfoStringWithUser =
-  "user.id_user,user.email,user.phone,user.name,user.delFlag,user.avatar,user.createAt,user.sex,user.lastSeen";
 
 export class UserDao extends BaseDao {
   constructor() {

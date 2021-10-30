@@ -282,9 +282,15 @@ export class ConversationController {
           await this.userInConversationDao.getAllConversationUser(
             id_conversation.toString()
           );
+        const listUserLastSeenMessage =
+          await this.userLastSeenMessageDao.getUserLastSeenInRoom(
+            id_conversation.toString()
+          );
+
         res.json({
           conversationInfo,
           listUser: listUserInRoom,
+          lastSeenMessageData: listUserLastSeenMessage,
         });
       }
     } catch (error) {
@@ -312,4 +318,8 @@ export class ConversationController {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
   }
+
+
+// public async getListSocketUserChat
+
 }

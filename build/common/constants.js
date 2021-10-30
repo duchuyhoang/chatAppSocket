@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GENDER = exports.CACHE_PREFIX = exports.MESSAGE_STATUS = exports.MESSAGE_TYPE = exports.FORBIDDEN = exports.SOCKET_LIST = exports.NOTIFICATION_TYPE = exports.USER_IN_ROOM_STATUS = exports.NOTIFICATION_STATUS = exports.CONVERSATION_TYPE = exports.FRIEND_STATUS = exports.SOCKET_PREFIX = exports.SOCKET_NAMESPACE = exports.SOCKET_ON_ACTIONS = exports.SOCKET_EMIT_ACTIONS = exports.HOST_NAME = exports.DB_ERROR = exports.REQUEST_SUCCESS = exports.UNAUTHORIZED = exports.INTERNAL_SERVER = exports.BAD_REQUEST = exports.VALIDATION_STATUS = exports.VALIDATION_ERROR = exports.VALIDATION_PHONE_REGEX = exports.DEL_FLAG = exports.imageFolder = exports.iconFolder = exports.serverAddress = void 0;
+exports.queryInfoStringWithUser = exports.GENDER = exports.CACHE_PREFIX = exports.MESSAGE_STATUS = exports.MESSAGE_TYPE = exports.FORBIDDEN = exports.SOCKET_LIST = exports.NOTIFICATION_TYPE = exports.USER_IN_ROOM_STATUS = exports.NOTIFICATION_STATUS = exports.CONVERSATION_TYPE = exports.FRIEND_STATUS = exports.SOCKET_PREFIX = exports.SOCKET_NAMESPACE = exports.SOCKET_ON_ACTIONS = exports.SOCKET_EMIT_ACTIONS = exports.HOST_NAME = exports.DB_ERROR = exports.REQUEST_SUCCESS = exports.UNAUTHORIZED = exports.INTERNAL_SERVER = exports.BAD_REQUEST = exports.VALIDATION_STATUS = exports.VALIDATION_ERROR = exports.VALIDATION_PHONE_REGEX = exports.DEL_FLAG = exports.imageFolder = exports.iconFolder = exports.serverAddress = void 0;
 const serverAddress = "171.241.113.240";
 exports.serverAddress = serverAddress;
 const iconFolder = "/icon/";
@@ -17,6 +17,8 @@ var DEL_FLAG;
     DEL_FLAG[DEL_FLAG["INVALID"] = 1] = "INVALID";
 })(DEL_FLAG || (DEL_FLAG = {}));
 exports.DEL_FLAG = DEL_FLAG;
+const queryInfoStringWithUser = "user.id_user,user.email,user.phone,user.name,user.delFlag,user.avatar,user.createAt,user.sex,user.lastSeen";
+exports.queryInfoStringWithUser = queryInfoStringWithUser;
 const VALIDATION_ERROR = "Validation error";
 exports.VALIDATION_ERROR = VALIDATION_ERROR;
 const VALIDATION_STATUS = 500;

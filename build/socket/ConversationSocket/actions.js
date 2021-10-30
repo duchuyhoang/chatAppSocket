@@ -92,7 +92,7 @@ exports.RoomSocketActions = {
         // console.log("socket",namespace.sockets);
         if (socket) {
             const { id_user, avatar, email, phone, name } = user;
-            socket
+            socket.broadcast
                 .to(constants_1.SOCKET_PREFIX.CONVERSATION + id_conversation.toString())
                 .emit(constants_1.SOCKET_EMIT_ACTIONS.EMIT_IS_TYPING, {
                 id_user,
@@ -111,7 +111,7 @@ exports.RoomSocketActions = {
     onStopTyping: (namespace, user, id_conversation, socket) => {
         if (socket) {
             const { id_user, avatar, email, phone, name } = user;
-            socket
+            socket.broadcast
                 .to(constants_1.SOCKET_PREFIX.CONVERSATION + id_conversation.toString())
                 .emit(constants_1.SOCKET_EMIT_ACTIONS.EMIT_STOP_TYPING, {
                 id_user,

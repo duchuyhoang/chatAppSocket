@@ -9,6 +9,9 @@ enum DEL_FLAG {
   INVALID = 1,
 }
 
+const queryInfoStringWithUser =
+  "user.id_user,user.email,user.phone,user.name,user.delFlag,user.avatar,user.createAt,user.sex,user.lastSeen";
+
 const VALIDATION_ERROR = "Validation error";
 const VALIDATION_STATUS = 500;
 const VALIDATION_PHONE_REGEX = /^[0-9\-+]{10,11}$/;
@@ -145,4 +148,5 @@ export {
   MESSAGE_STATUS,
   CACHE_PREFIX,
   GENDER,
+  queryInfoStringWithUser
 };

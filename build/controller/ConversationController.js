@@ -183,9 +183,11 @@ class ConversationController {
                 }
                 else {
                     const listUserInRoom = yield this.userInConversationDao.getAllConversationUser(id_conversation.toString());
+                    const listUserLastSeenMessage = yield this.userLastSeenMessageDao.getUserLastSeenInRoom(id_conversation.toString());
                     res.json({
                         conversationInfo,
                         listUser: listUserInRoom,
+                        lastSeenMessageData: listUserLastSeenMessage,
                     });
                 }
             }

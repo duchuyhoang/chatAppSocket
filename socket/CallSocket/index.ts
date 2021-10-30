@@ -14,18 +14,16 @@ export const CallSocket = (namespace: Namespace) => {
   namespace
     // .off("connection", () => {})
     .on("connection", (socket: Socket) => {
-
       socket.on(
         SOCKET_ON_ACTIONS.ON_GET_LIST_USER_IN_ROOM,
-        async ({ id_conversation }) => {          
+        async ({ id_conversation }) => {
           const socketList: string[] = [];
           await socket.join(SOCKET_PREFIX.CALL_CHAT + id_conversation);
           const socketSet = await namespace
             .to(SOCKET_PREFIX.CALL_CHAT + id_conversation)
             .allSockets();
           socketSet.forEach((value) => {
-            if(value!=socket.id)
-            socketList.push(value);
+            if (value != socket.id) socketList.push(value);
           });
 
           socket.emit(SOCKET_EMIT_ACTIONS.EMIT_LIST_USER_RESPONSE, {
@@ -40,7 +38,7 @@ export const CallSocket = (namespace: Namespace) => {
       //     namespace
       //       .to(receiverSockerId)
       //       .emit(SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_OFFER, { signal });
-         
+
       //   }
       // );
 
@@ -49,10 +47,10 @@ export const CallSocket = (namespace: Namespace) => {
       //   async ({ id_room, signal, receiverSockerId,stream,callerSocketId }) => {
       //     namespace
       //       .to(receiverSockerId)
-      //       .emit(SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_OFFER, { signal,callerSocketId,stream });    
+      //       .emit(SOCKET_EMIT_ACTIONS.EMIT_SIGNAL_OFFER, { signal,callerSocketId,stream });
       //   }
       // );
-      
+
       // socket.on(
       //   SOCKET_ON_ACTIONS.ON_SEND_ANSWER_SIGNAL,
       //   ({receiverSocketId,signal,callerSocketId})=>{
@@ -60,28 +58,100 @@ export const CallSocket = (namespace: Namespace) => {
       //   }
       // )
 
+      socket.on(
+        "request call",
+        ({
+          peerId,
+          streamPeerId,
+          callerSocketId,
+          receiverSocket,
+          userInfo,
+          mic,
+          video,
+          type,
+        }) => {
+          namespace.to(receiverSocket).emit("user joined", {
+            callerSocketId,
+            peerId,
+            streamPeerId,
+            userInfo,
+            type,
+            mic,
+            video,
+          });
+        }
+      );
 
-socket.on("request call",({peerId,callerSocketId,receiverSocket,userInfo})=>{
-  namespace.to(receiverSocket).emit("user joined",{callerSocketId,peerId,userInfo})
+      socket.on("socketLeave", ({ id_room, socketId }) => {
+        namespace
+          .to(SOCKET_PREFIX.CALL_CHAT + id_room)
+          .emit("user left", { socketId });
+      });
+
+      socket.on("make change", ({ id_room, socketId, mic, video }) => {
+        namespace
+          .to(SOCKET_PREFIX.CALL_CHAT + id_room)
+          .emit("something change", { id_room, socketId, mic, video });
+      });
+
+      socket.on("start share screen", async ({ id_room }) => {
+        const socketList: string[] = [];
+        const socketSet = await namespace
+          .to(SOCKET_PREFIX.CALL_CHAT + id_room)
+          .allSockets();
+        socketSet.forEach((value) => {
+          if (value != socket.id) socketList.push(value);
+        });
+
+        socket.emit("share to", { socketList });
+
+        
+        
+
+        // namespace.to(SOCKET_PREFIX.CALL_CHAT + id_room).emit("someone share screen",{stream,socketId})
+      });
+
+      socket.on(
+        "request share screen",
+        ({
+          peerId,
+          callerSocketId,
+          receiverSocket,
+          userInfo,
+          mic,
+          video,
+          type,
+        }) => {    
+          namespace.to(receiverSocket).emit("user share screen", {
+            peerId,
+            callerSocketId,
+            userInfo,
+            mic,
+            video,
+            type,
+          });
+        }
+      );
+
+
+      socket.on(
+        "accept share screen",
+        ({ callerSocketId, socketId, peerId }) => {
+          namespace
+            .to(callerSocketId)
+            .emit("user accepted share screen", { socketId, peerId });
+        }
+      );
+
+
+socket.on("stop share",({socketId,id_room})=>{
+  socket.broadcast.to(SOCKET_PREFIX.CALL_CHAT+id_room).emit("user stop share",{socketId})
 })
 
 
-socket.on("socketLeave",({id_room,socketId})=>{
-  namespace.to(SOCKET_PREFIX.CALL_CHAT + id_room).emit("user left",{socketId})
-})
 
-socket.on("make change",({id_room,socketId})=>{
-  namespace.to(SOCKET_PREFIX.CALL_CHAT + id_room).emit("something change",{id_room,socketId})
-})
-
-
-
-
-socket.on("disconnect",()=>{
-// console.log("diss");
-
-})
-
-
+      socket.on("disconnect", () => {
+        // console.log("diss");
+      });
     });
 };

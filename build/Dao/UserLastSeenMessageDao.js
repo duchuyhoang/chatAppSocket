@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserLastSeenMessageDao = void 0;
 const BaseDao_1 = require("./BaseDao");
+const constants_1 = require("../common/constants");
 class UserLastSeenMessageDao extends BaseDao_1.BaseDao {
     addUserToRoom(id_room, id_user) {
         return new Promise((resolve, reject) => {
@@ -9,6 +10,20 @@ class UserLastSeenMessageDao extends BaseDao_1.BaseDao {
                 if (err)
                     reject(err);
                 resolve(result);
+            });
+        });
+    }
+    getUserLastSeenInRoom(id_room) {
+        return new Promise((resolve, reject) => {
+            this.db.query(`
+SELECT user_last_seen_message.*,
+${constants_1.queryInfoStringWithUser}
+ FROM user_last_seen_message INNER JOIN user ON user.id_user=id_user_last_seen WHERE user_last_seen_message.id_room=?;
+`, [id_room], (err, result) => {
+                if (err)
+                    reject(err);
+                else
+                    resolve(result);
             });
         });
     }
