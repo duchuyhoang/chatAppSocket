@@ -477,15 +477,20 @@ export class MessageController {
         IQueryMessage[]
       >(CACHE_PREFIX.MESSAGE + id_conversation);
 
-      if (!memoMessages) {
-        listMessage = await this.messageDao.getMessageByConversation(
-          id_conversation?.toString() || ""
-        );
-        MessageCache.set(CACHE_PREFIX.MESSAGE + id_conversation, listMessage);
-      } else {
-        console.log("memo");        
-        listMessage = memoMessages;
-      }
+      // if (!memoMessages) {
+      //   listMessage = await this.messageDao.getMessageByConversation(
+      //     id_conversation?.toString() || ""
+      //   );
+      //   MessageCache.set(CACHE_PREFIX.MESSAGE + id_conversation, listMessage);
+      // } else {
+      //   console.log("memo");        
+      //   listMessage = memoMessages;
+      // }
+
+      listMessage = await this.messageDao.getMessageByConversation(
+        id_conversation?.toString() || ""
+      );
+
 
       res.json({
         ...Pagination(

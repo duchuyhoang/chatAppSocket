@@ -338,14 +338,16 @@ class MessageController {
                 }
                 let listMessage = [];
                 const memoMessages = MessageCache_1.MessageCache.get(constants_1.CACHE_PREFIX.MESSAGE + id_conversation);
-                if (!memoMessages) {
-                    listMessage = yield this.messageDao.getMessageByConversation((id_conversation === null || id_conversation === void 0 ? void 0 : id_conversation.toString()) || "");
-                    MessageCache_1.MessageCache.set(constants_1.CACHE_PREFIX.MESSAGE + id_conversation, listMessage);
-                }
-                else {
-                    console.log("memo");
-                    listMessage = memoMessages;
-                }
+                // if (!memoMessages) {
+                //   listMessage = await this.messageDao.getMessageByConversation(
+                //     id_conversation?.toString() || ""
+                //   );
+                //   MessageCache.set(CACHE_PREFIX.MESSAGE + id_conversation, listMessage);
+                // } else {
+                //   console.log("memo");        
+                //   listMessage = memoMessages;
+                // }
+                listMessage = yield this.messageDao.getMessageByConversation((id_conversation === null || id_conversation === void 0 ? void 0 : id_conversation.toString()) || "");
                 res.json(Object.assign({}, (0, pagination_1.Pagination)(listMessage, parseInt((offset === null || offset === void 0 ? void 0 : offset.toString()) || "0"), parseInt((limit === null || limit === void 0 ? void 0 : limit.toString()) || "1"))));
             }
             catch (err) {
