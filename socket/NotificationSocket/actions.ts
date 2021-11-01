@@ -38,5 +38,6 @@ export const NotificationSocketActions = {
   async emitNotification(namespace: Namespace, room: string, data: ISendNotification) {    
     namespace.in(room).emit(SOCKET_EMIT_ACTIONS.EMIT_NOTIFICATION, data);
   },
+  
   // handleFriendRequestSuccess(namespace:Namespace,)
 };

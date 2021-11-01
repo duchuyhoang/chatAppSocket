@@ -84,6 +84,11 @@ class NotificationController {
         return __awaiter(this, void 0, void 0, function* () {
             const userInfo = res.locals.decodeToken;
             const { status, id_notification = "", id_sender = "" } = req.body;
+            const notificationSocket = req.app.get(constants_1.SOCKET_LIST) &&
+                req.app.get(constants_1.SOCKET_LIST)[constants_1.SOCKET_NAMESPACE.NOTIFICATION];
+            if (!notificationSocket) {
+                (0, functions_1.throwHttpError)("Something wrong", constants_1.BAD_REQUEST, next);
+            }
             if (status.toString() !== constants_1.NOTIFICATION_STATUS.FULFILLED.toString() &&
                 status.toString() !== constants_1.NOTIFICATION_STATUS.REJECT.toString()) {
                 res.status(constants_1.BAD_REQUEST).json({ message: "BAD REQUEST" });
@@ -95,12 +100,31 @@ class NotificationController {
                     return;
                 }
                 const receiverInfo = yield this.userDao.getUserInfoById(userInfo.id_user.toString(), id_sender);
-                if (!receiverInfo) {
+                const senderInfo = yield this.userDao.getUserInfoById(id_sender, userInfo.id_user.toString());
+                if (!receiverInfo || !senderInfo) {
                     res.status(constants_1.BAD_REQUEST).json({ message: "Something wrong" });
                     return;
                 }
                 else {
                     res.json({ message: "Success" });
+                    // Send to sender
+                    actions_1.NotificationSocketActions.emitNotification(notificationSocket, constants_1.SOCKET_PREFIX.NOTIFICATION + id_sender, {
+                        id_owner: userInfo.id_user,
+                        type: constants_1.NOTIFICATION_TYPE.ACCEPT_FRIEND_REQUEST,
+                        createAt: new Date().toISOString(),
+                        data: {
+                            user: senderInfo,
+                        },
+                    });
+                    // Send to current user
+                    actions_1.NotificationSocketActions.emitNotification(notificationSocket, constants_1.SOCKET_PREFIX.NOTIFICATION + userInfo.id_user, {
+                        id_owner: userInfo.id_user,
+                        type: constants_1.NOTIFICATION_TYPE.ACCEPT_FRIEND_REQUEST,
+                        createAt: new Date().toISOString(),
+                        data: {
+                            user: receiverInfo,
+                        },
+                    });
                 }
             }
             catch (err) {

@@ -118,6 +118,14 @@ export class NotificationController {
   ) {
     const userInfo: DecodedUser = res.locals.decodeToken;
     const { status, id_notification = "", id_sender = "" } = req.body;
+
+    const notificationSocket: Namespace =
+      req.app.get(SOCKET_LIST) &&
+      req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.NOTIFICATION];
+    if (!notificationSocket) {
+      throwHttpError("Something wrong", BAD_REQUEST, next);
+    }
+
     if (
       status.toString() !== NOTIFICATION_STATUS.FULFILLED.toString() &&
       status.toString() !== NOTIFICATION_STATUS.REJECT.toString()
@@ -138,13 +146,49 @@ export class NotificationController {
       }
 
       const receiverInfo: IUserWithFriendshipStatus | null =
-        await this.userDao.getUserInfoById(userInfo.id_user.toString(),id_sender);
-      if (!receiverInfo) {
+        await this.userDao.getUserInfoById(
+          userInfo.id_user.toString(),
+          id_sender
+        );
+
+      const senderInfo: IUserWithFriendshipStatus | null =
+        await this.userDao.getUserInfoById(
+          id_sender,
+          userInfo.id_user.toString()
+        );
+
+      if (!receiverInfo || !senderInfo) {
         res.status(BAD_REQUEST).json({ message: "Something wrong" });
         return;
-      }
-      else {
+      } else {
         res.json({ message: "Success" });
+
+        // Send to sender
+        NotificationSocketActions.emitNotification(
+          notificationSocket,
+          SOCKET_PREFIX.NOTIFICATION + id_sender,
+          {
+            id_owner: userInfo.id_user,
+            type: NOTIFICATION_TYPE.ACCEPT_FRIEND_REQUEST,
+            createAt: new Date().toISOString(),
+            data: {
+              user: senderInfo,
+            },
+          }
+        );
+        // Send to current user
+        NotificationSocketActions.emitNotification(
+          notificationSocket,
+          SOCKET_PREFIX.NOTIFICATION + userInfo.id_user,
+          {
+            id_owner: userInfo.id_user,
+            type: NOTIFICATION_TYPE.ACCEPT_FRIEND_REQUEST,
+            createAt: new Date().toISOString(),
+            data: {
+              user: receiverInfo,
+            },
+          }
+        );
       }
     } catch (err) {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
