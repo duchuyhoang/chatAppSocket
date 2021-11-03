@@ -201,7 +201,11 @@ export class MessageController {
         message
       );
 
-      res.json({ message: "ok" });
+      res.json({
+        id_message: dbResult.insertId,
+        type: MESSAGE_TYPE.TEXT,
+        content
+       });
     } catch (err) {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }

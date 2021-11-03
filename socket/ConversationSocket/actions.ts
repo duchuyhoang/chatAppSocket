@@ -143,7 +143,7 @@ export const RoomSocketActions = {
     if (socket) {
       const { id_user, avatar, email, phone, name } = user;
       socket
-      // .broadcast
+      .broadcast
         .to(SOCKET_PREFIX.CONVERSATION + id_conversation.toString())
         .emit(SOCKET_EMIT_ACTIONS.EMIT_IS_TYPING, {
           id_user,
@@ -168,7 +168,7 @@ export const RoomSocketActions = {
     if (socket) {
       const { id_user, avatar, email, phone, name } = user;
       socket
-      // .broadcast
+      .broadcast
         .to(SOCKET_PREFIX.CONVERSATION + id_conversation.toString())
         .emit(SOCKET_EMIT_ACTIONS.EMIT_STOP_TYPING, {
           id_user,
