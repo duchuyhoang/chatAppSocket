@@ -158,7 +158,7 @@ export class MessageController {
     next: NextFunction,
     listUser: UserInConversation[]
   ) {
-    const { content, id_conversation } = req.body;
+    const { content, id_conversation, id_preview } = req.body;
     const cachePrefix = CACHE_PREFIX.MESSAGE + id_conversation;
     const userInfo: DecodedUser = res.locals.decodeToken;
     try {
@@ -197,6 +197,7 @@ export class MessageController {
           creator: userInfo,
           default: "New message",
           data: content,
+          id_preview,
         },
         message
       );
@@ -204,8 +205,9 @@ export class MessageController {
       res.json({
         id_message: dbResult.insertId,
         type: MESSAGE_TYPE.TEXT,
-        content
-       });
+        id_preview,
+        content,
+      });
     } catch (err) {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
@@ -220,7 +222,7 @@ export class MessageController {
     let listImageLink: string[] | null = null;
     let imageLink = null;
     let data: IQueryMessage[] = [];
-    const { type, id_conversation = "" } = req.body;
+    const { type, id_conversation = "", id_preview } = req.body;
     const cachePrefix = CACHE_PREFIX.MESSAGE + id_conversation;
     const userInfo: DecodedUser = res.locals.decodeToken;
     try {
@@ -309,7 +311,7 @@ export class MessageController {
           data
         );
         // else
-        res.json({ data });
+        res.json({ data:{...data,id_preview} });
       }
     } catch (err) {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
@@ -325,7 +327,7 @@ export class MessageController {
     let listImageLink: string[] | null = null;
     let imageLink = null;
     let data: IQueryMessage[] = [];
-    const { type, id_conversation = "", content } = req.body;
+    const { type, id_conversation = "", content, id_preview } = req.body;
     const cachePrefix = CACHE_PREFIX.MESSAGE + id_conversation;
     const userInfo: DecodedUser = res.locals.decodeToken;
     const listImage: IconInfo[] = res.locals.imageInfo;
@@ -432,11 +434,12 @@ export class MessageController {
             creator: userInfo,
             default: "Text and image",
             data,
+            id_preview,
           },
           data
         );
         // else
-        res.json({ data });
+        res.json({ data: { ...data, id_preview } });
       }
     } catch (err) {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
@@ -451,7 +454,7 @@ export class MessageController {
         offset,
         limit,
       });
-    } catch (err: any) {    
+    } catch (err: any) {
       throwValidateError(err, next);
       return;
     }
@@ -487,14 +490,13 @@ export class MessageController {
       //   );
       //   MessageCache.set(CACHE_PREFIX.MESSAGE + id_conversation, listMessage);
       // } else {
-      //   console.log("memo");        
+      //   console.log("memo");
       //   listMessage = memoMessages;
       // }
 
       listMessage = await this.messageDao.getMessageByConversation(
         id_conversation?.toString() || ""
       );
-
 
       res.json({
         ...Pagination(

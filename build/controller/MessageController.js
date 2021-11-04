@@ -97,7 +97,7 @@ class MessageController {
     }
     insertTextMessage(req, res, next, listUser) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { content, id_conversation } = req.body;
+            const { content, id_conversation, id_preview } = req.body;
             const cachePrefix = constants_1.CACHE_PREFIX.MESSAGE + id_conversation;
             const userInfo = res.locals.decodeToken;
             try {
@@ -128,11 +128,13 @@ class MessageController {
                     creator: userInfo,
                     default: "New message",
                     data: content,
+                    id_preview,
                 }, message);
                 res.json({
                     id_message: dbResult.insertId,
                     type: constants_1.MESSAGE_TYPE.TEXT,
-                    content
+                    id_preview,
+                    content,
                 });
             }
             catch (err) {
@@ -145,7 +147,7 @@ class MessageController {
             let listImageLink = null;
             let imageLink = null;
             let data = [];
-            const { type, id_conversation = "" } = req.body;
+            const { type, id_conversation = "", id_preview } = req.body;
             const cachePrefix = constants_1.CACHE_PREFIX.MESSAGE + id_conversation;
             const userInfo = res.locals.decodeToken;
             try {
@@ -210,7 +212,7 @@ class MessageController {
                         data,
                     }, data);
                     // else
-                    res.json({ data });
+                    res.json({ data: Object.assign(Object.assign({}, data), { id_preview }) });
                 }
             }
             catch (err) {
@@ -223,7 +225,7 @@ class MessageController {
             let listImageLink = null;
             let imageLink = null;
             let data = [];
-            const { type, id_conversation = "", content } = req.body;
+            const { type, id_conversation = "", content, id_preview } = req.body;
             const cachePrefix = constants_1.CACHE_PREFIX.MESSAGE + id_conversation;
             const userInfo = res.locals.decodeToken;
             const listImage = res.locals.imageInfo;
@@ -303,9 +305,10 @@ class MessageController {
                         creator: userInfo,
                         default: "Text and image",
                         data,
+                        id_preview,
                     }, data);
                     // else
-                    res.json({ data });
+                    res.json({ data: Object.assign(Object.assign({}, data), { id_preview }) });
                 }
             }
             catch (err) {
@@ -348,7 +351,7 @@ class MessageController {
                 //   );
                 //   MessageCache.set(CACHE_PREFIX.MESSAGE + id_conversation, listMessage);
                 // } else {
-                //   console.log("memo");        
+                //   console.log("memo");
                 //   listMessage = memoMessages;
                 // }
                 listMessage = yield this.messageDao.getMessageByConversation((id_conversation === null || id_conversation === void 0 ? void 0 : id_conversation.toString()) || "");
