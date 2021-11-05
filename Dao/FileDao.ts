@@ -57,7 +57,7 @@ export class FileDao extends BaseDao {
 public createIcon(iconInfo:Omit<Icon,"delFlag"|"id_icon"|"category"|"createAt"> & {categoryCd:string}){
 return new Promise((resolve, reject) => {
     const {url,blocksOfWidth,blocksOfHeight,width,height,totalFrames,categoryCd}=iconInfo;
-    this.db.query(`INSERT INTO icon(url,blocksOfWidth,blocksOfHeight,width,height,totalFrames,createAt,category) 
+    this.db.query(`INSERT INTO icon(iconUrl,blocksOfWidth,blocksOfHeight,width,height,totalFrames,createAt,category) 
     VALUES(?,?,?,?,?,?,now(),?)`,[url,blocksOfWidth,blocksOfHeight,width,height,totalFrames,categoryCd],
     (err,result)=>{
         if(err){       

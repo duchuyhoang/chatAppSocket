@@ -53,7 +53,7 @@ class FileDao extends BaseDao_1.BaseDao {
     createIcon(iconInfo) {
         return new Promise((resolve, reject) => {
             const { url, blocksOfWidth, blocksOfHeight, width, height, totalFrames, categoryCd } = iconInfo;
-            this.db.query(`INSERT INTO icon(url,blocksOfWidth,blocksOfHeight,width,height,totalFrames,createAt,category) 
+            this.db.query(`INSERT INTO icon(iconUrl,blocksOfWidth,blocksOfHeight,width,height,totalFrames,createAt,category) 
     VALUES(?,?,?,?,?,?,now(),?)`, [url, blocksOfWidth, blocksOfHeight, width, height, totalFrames, categoryCd], (err, result) => {
                 if (err) {
                     reject(err);

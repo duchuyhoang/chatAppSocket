@@ -55,7 +55,6 @@ class MessageController {
         return __awaiter(this, void 0, void 0, function* () {
             const { type, id_conversation = "" } = req.body;
             const userInfo = res.locals.decodeToken;
-            const notificationSocket = req.app.get(constants_1.SOCKET_LIST)[constants_1.SOCKET_NAMESPACE.NOTIFICATION];
             let listImageLink = null;
             let imageLink = null;
             const listUser = yield this.userInConversationDao.getAllConversationUser(
@@ -209,7 +208,7 @@ class MessageController {
                         data,
                     }, data);
                     // else
-                    res.json({ data: Object.assign(Object.assign({}, data), { id_preview }) });
+                    res.json({ data, id_preview });
                 }
             }
             catch (err) {
@@ -305,7 +304,7 @@ class MessageController {
                         id_preview,
                     }, data);
                     // else
-                    res.json({ data: Object.assign(Object.assign({}, data), { id_preview }) });
+                    res.json({ data, id_preview });
                 }
             }
             catch (err) {

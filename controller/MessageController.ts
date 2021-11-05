@@ -101,9 +101,6 @@ export class MessageController {
     const { type, id_conversation = "" } = req.body;
 
     const userInfo: DecodedUser = res.locals.decodeToken;
-    const notificationSocket =
-      req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.NOTIFICATION];
-
     let listImageLink = null;
     let imageLink = null;
 
@@ -311,7 +308,7 @@ export class MessageController {
           data
         );
         // else
-        res.json({ data:{...data,id_preview} });
+        res.json({ data,id_preview });
       }
     } catch (err) {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
@@ -439,7 +436,7 @@ export class MessageController {
           data
         );
         // else
-        res.json({ data: { ...data, id_preview } });
+        res.json({data, id_preview  });
       }
     } catch (err) {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
