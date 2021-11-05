@@ -82,7 +82,6 @@ export class FileControler {
     next: NextFunction
   ) {
     const {
-      url,
       blocksOfWidth,
       blocksOfHeight,
       width,

@@ -61,7 +61,7 @@ class FileControler {
     }
     insertIcon(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { url, blocksOfWidth, blocksOfHeight, width, height, totalFrames, categoryCd, } = req.body;
+            const { blocksOfWidth, blocksOfHeight, width, height, totalFrames, categoryCd, } = req.body;
             try {
                 if (!!req.iconInfo) {
                     const link = yield (0, functions_1.uploadSingle)({
