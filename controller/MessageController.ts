@@ -203,10 +203,10 @@ export class MessageController {
       );
 
       res.json({
-        id_message: dbResult.insertId,
-        type: MESSAGE_TYPE.TEXT,
-        id_preview,
-        content,
+        data:{
+          ...message,
+          id_preview
+        }
       });
     } catch (err) {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);

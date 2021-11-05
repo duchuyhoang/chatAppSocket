@@ -131,10 +131,7 @@ class MessageController {
                     id_preview,
                 }, message);
                 res.json({
-                    id_message: dbResult.insertId,
-                    type: constants_1.MESSAGE_TYPE.TEXT,
-                    id_preview,
-                    content,
+                    data: Object.assign(Object.assign({}, message), { id_preview })
                 });
             }
             catch (err) {
