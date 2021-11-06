@@ -55,6 +55,7 @@ export class NotificationController {
   ) {
     const { type, id_receiver, message = null } = req.body;
     const userInfo: DecodedUser = res.locals.decodeToken;
+console.log(req.body);
 
     try {
       const isValid = await CreateNotificationSchema.validate({

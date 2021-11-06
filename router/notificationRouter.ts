@@ -7,9 +7,7 @@ const upload=multer();
 const notificationRouter = express.Router();
 
 
-notificationRouter.post("/insertNewFriendRequest",verifyToken,
-
-new NotificationController().insertNewNotification);
+notificationRouter.post("/insertNewFriendRequest",verifyToken,upload.none(),new NotificationController().insertNewNotification);
 notificationRouter.get("/getAllNotification",verifyToken,upload.none(),new NotificationController().getAllNotificationByUser);
 notificationRouter.get("/getNotification/:id",verifyToken,new NotificationController().getConversationById);
 notificationRouter.post("/answerFriendRequest",verifyToken,new NotificationController().answerFriendRequest);

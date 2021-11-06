@@ -9,7 +9,7 @@ const authenticate_1 = require("../middlewares/authenticate");
 const multer_1 = __importDefault(require("multer"));
 const upload = (0, multer_1.default)();
 const notificationRouter = express_1.default.Router();
-notificationRouter.post("/insertNewFriendRequest", authenticate_1.verifyToken, new NotificationController_1.NotificationController().insertNewNotification);
+notificationRouter.post("/insertNewFriendRequest", authenticate_1.verifyToken, upload.none(), new NotificationController_1.NotificationController().insertNewNotification);
 notificationRouter.get("/getAllNotification", authenticate_1.verifyToken, upload.none(), new NotificationController_1.NotificationController().getAllNotificationByUser);
 notificationRouter.get("/getNotification/:id", authenticate_1.verifyToken, new NotificationController_1.NotificationController().getConversationById);
 notificationRouter.post("/answerFriendRequest", authenticate_1.verifyToken, new NotificationController_1.NotificationController().answerFriendRequest);

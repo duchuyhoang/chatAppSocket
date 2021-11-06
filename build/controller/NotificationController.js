@@ -41,6 +41,7 @@ class NotificationController {
         return __awaiter(this, void 0, void 0, function* () {
             const { type, id_receiver, message = null } = req.body;
             const userInfo = res.locals.decodeToken;
+            console.log(req.body);
             try {
                 const isValid = yield Notification_1.CreateNotificationSchema.validate({
                     type,
