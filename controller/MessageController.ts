@@ -1,7 +1,11 @@
 import { NextFunction, Response, Request } from "express";
 import { MessageDao } from "../Dao/MessageDao";
 import { generateMessage, IQueryMessage, Message } from "../models/Message";
-import { SendMessageSchema, GetMessageSchema } from "../validations/Message";
+import {
+  SendMessageSchema,
+  GetMessageSchema,
+  SendIconMessageSchema,
+} from "../validations/Message";
 import {
   throwHttpError,
   uploadMultipleImage,
@@ -34,15 +38,20 @@ import { MessageCache } from "../cache/MessageCache";
 import { NotificationSocketActions } from "../socket/NotificationSocket/actions";
 import { RoomSocketActions } from "../socket/ConversationSocket/actions";
 import { Pagination } from "../common/pagination";
+import { FileDao } from "../Dao/FileDao";
 export class MessageController {
   private messageDao: MessageDao;
+  private fileDao: FileDao;
   private userInConversationDao: UserInConversationDao;
+
   constructor() {
     this.messageDao = new MessageDao();
+    this.fileDao = new FileDao();
     this.userInConversationDao = new UserInConversationDao();
     this.emitMessage = this.emitMessage.bind(this);
     this.insertNewMessage = this.insertNewMessage.bind(this);
     this.getMesssages = this.getMesssages.bind(this);
+    this.insertIconMessage = this.insertIconMessage.bind(this);
   }
 
   private emitMessage = (
@@ -119,6 +128,8 @@ export class MessageController {
         await this.insertImageMessage(req, res, next, listUser);
         break;
 
+      case MESSAGE_TYPE.ICON.toString():
+        break;
       case MESSAGE_TYPE.TEXT_AND_IMAGE.toString():
         await this.insertTextAndMessage(req, res, next, listUser);
         break;
@@ -200,13 +211,13 @@ export class MessageController {
       );
 
       res.json({
-        data:{
+        data: {
           ...message,
-          id_preview
-        }
+          id_preview,
+        },
       });
     } catch (err) {
-      console.log(err);      
+      console.log(err);
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
   }
@@ -309,8 +320,84 @@ export class MessageController {
           data
         );
         // else
-        res.json({ data,id_preview });
+        res.json({ data, id_preview });
       }
+    } catch (err) {
+      throwHttpError(DB_ERROR, BAD_REQUEST, next);
+    }
+  }
+
+  public async insertIconMessage(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+    listUser: UserInConversation[]
+  ) {
+    const { id_icon, id_conversation, id_preview, type } = req.body;
+    const userInfo: DecodedUser = res.locals.decodeToken;
+    try {
+      const isValid = await SendIconMessageSchema.validate({
+        id_icon,
+        id_conversation,
+        type,
+      });
+    } catch (error: any) {
+      throwValidateError(error, next);
+      return;
+    }
+
+    try {
+      const selectedIcon = await this.fileDao.getIconById(id_icon);
+      if (!selectedIcon) {
+        res.status(400).json({ message: "That icon is no longer exist" });
+        return;
+      }
+
+      const dbResult: OkPacket = await this.messageDao.insertNewIconMessage({
+        id_conversation,
+        id_icon,
+        id_user: userInfo.id_user.toString(),
+      });
+
+      const newMessage = generateMessage({
+        id_message: dbResult.insertId.toString(),
+        createAt: new Date().toISOString(),
+        id_user: userInfo.id_user.toString(),
+        delFlag: DEL_FLAG.VALID,
+        id_conversation: id_conversation,
+        type: MESSAGE_TYPE.ICON,
+        userInfo,
+        id_icon: selectedIcon.id_icon.toString(),
+        iconUrl: selectedIcon.category.id.toString(),
+        icon_delFlg: selectedIcon.delFlag,
+        blocksOfWidth: selectedIcon.blocksOfWidth,
+        blocksOfHeight: selectedIcon.blocksOfHeight,
+        width: selectedIcon.width,
+        height: selectedIcon.height,
+        totalFrames: selectedIcon.totalFrames,
+        icon_createAt: selectedIcon.createAt
+          ? selectedIcon.createAt.toString()
+          : new Date().toISOString(),
+        icon_category: selectedIcon.category.id,
+      });
+
+      this.emitMessage(
+        req,
+        listUser,
+        userInfo,
+        id_conversation,
+        {
+          type: MESSAGE_TYPE.ICON,
+          notificationType: NOTIFICATION_TYPE.NEW_MESSAGE,
+          creator: userInfo,
+          default: "Icon message",
+          newMessage,
+          id_preview,
+        },
+        newMessage
+      );
+
+      res.json({ data: newMessage, id_preview });
     } catch (err) {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
@@ -437,7 +524,7 @@ export class MessageController {
           data
         );
         // else
-        res.json({data, id_preview  });
+        res.json({ data, id_preview });
       }
     } catch (err) {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
@@ -495,6 +582,7 @@ export class MessageController {
       listMessage = await this.messageDao.getMessageByConversation(
         id_conversation?.toString() || ""
       );
+  
 
       res.json({
         ...Pagination(

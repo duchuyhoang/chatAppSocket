@@ -13,7 +13,7 @@ exports.NotificationSocket = void 0;
 const constants_1 = require("../../common/constants");
 const actions_1 = require("./actions");
 const NotificationSocket = (namespace) => {
-    namespace.once("connection", (socket) => __awaiter(void 0, void 0, void 0, function* () {
+    namespace.off("connection", () => { }).on("connection", (socket) => __awaiter(void 0, void 0, void 0, function* () {
         yield actions_1.NotificationSocketActions.initialActions(namespace, socket);
         // console.log(socket.data);
         socket.on(constants_1.SOCKET_ON_ACTIONS.ON_DISCONNECT, actions_1.NotificationSocketActions.onDisconnect(namespace, socket));

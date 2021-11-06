@@ -20,6 +20,7 @@ const MessageCache_1 = require("../cache/MessageCache");
 const actions_1 = require("../socket/NotificationSocket/actions");
 const actions_2 = require("../socket/ConversationSocket/actions");
 const pagination_1 = require("../common/pagination");
+const FileDao_1 = require("../Dao/FileDao");
 class MessageController {
     constructor() {
         this.emitMessage = (req, listUser, userInfo, id_conversation, notificationEmitData, messageEmitData) => {
@@ -46,10 +47,12 @@ class MessageController {
             });
         };
         this.messageDao = new MessageDao_1.MessageDao();
+        this.fileDao = new FileDao_1.FileDao();
         this.userInConversationDao = new UserInConversationDao_1.UserInConversationDao();
         this.emitMessage = this.emitMessage.bind(this);
         this.insertNewMessage = this.insertNewMessage.bind(this);
         this.getMesssages = this.getMesssages.bind(this);
+        this.insertIconMessage = this.insertIconMessage.bind(this);
     }
     insertNewMessage(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -66,6 +69,8 @@ class MessageController {
                     break;
                 case constants_1.MESSAGE_TYPE.IMAGE.toString():
                     yield this.insertImageMessage(req, res, next, listUser);
+                    break;
+                case constants_1.MESSAGE_TYPE.ICON.toString():
                     break;
                 case constants_1.MESSAGE_TYPE.TEXT_AND_IMAGE.toString():
                     yield this.insertTextAndMessage(req, res, next, listUser);
@@ -130,7 +135,7 @@ class MessageController {
                     id_preview,
                 }, message);
                 res.json({
-                    data: Object.assign(Object.assign({}, message), { id_preview })
+                    data: Object.assign(Object.assign({}, message), { id_preview }),
                 });
             }
             catch (err) {
@@ -211,6 +216,68 @@ class MessageController {
                     // else
                     res.json({ data, id_preview });
                 }
+            }
+            catch (err) {
+                (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
+            }
+        });
+    }
+    insertIconMessage(req, res, next, listUser) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id_icon, id_conversation, id_preview, type } = req.body;
+            const userInfo = res.locals.decodeToken;
+            try {
+                const isValid = yield Message_2.SendIconMessageSchema.validate({
+                    id_icon,
+                    id_conversation,
+                    type,
+                });
+            }
+            catch (error) {
+                (0, functions_1.throwValidateError)(error, next);
+                return;
+            }
+            try {
+                const selectedIcon = yield this.fileDao.getIconById(id_icon);
+                if (!selectedIcon) {
+                    res.status(400).json({ message: "That icon is no longer exist" });
+                    return;
+                }
+                const dbResult = yield this.messageDao.insertNewIconMessage({
+                    id_conversation,
+                    id_icon,
+                    id_user: userInfo.id_user.toString(),
+                });
+                const newMessage = (0, Message_1.generateMessage)({
+                    id_message: dbResult.insertId.toString(),
+                    createAt: new Date().toISOString(),
+                    id_user: userInfo.id_user.toString(),
+                    delFlag: constants_1.DEL_FLAG.VALID,
+                    id_conversation: id_conversation,
+                    type: constants_1.MESSAGE_TYPE.ICON,
+                    userInfo,
+                    id_icon: selectedIcon.id_icon.toString(),
+                    iconUrl: selectedIcon.category.id.toString(),
+                    icon_delFlg: selectedIcon.delFlag,
+                    blocksOfWidth: selectedIcon.blocksOfWidth,
+                    blocksOfHeight: selectedIcon.blocksOfHeight,
+                    width: selectedIcon.width,
+                    height: selectedIcon.height,
+                    totalFrames: selectedIcon.totalFrames,
+                    icon_createAt: selectedIcon.createAt
+                        ? selectedIcon.createAt.toString()
+                        : new Date().toISOString(),
+                    icon_category: selectedIcon.category.id,
+                });
+                this.emitMessage(req, listUser, userInfo, id_conversation, {
+                    type: constants_1.MESSAGE_TYPE.ICON,
+                    notificationType: constants_1.NOTIFICATION_TYPE.NEW_MESSAGE,
+                    creator: userInfo,
+                    default: "Icon message",
+                    newMessage,
+                    id_preview,
+                }, newMessage);
+                res.json({ data: newMessage, id_preview });
             }
             catch (err) {
                 (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);

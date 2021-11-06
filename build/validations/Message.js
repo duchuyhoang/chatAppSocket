@@ -19,7 +19,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GetMessageSchema = exports.SendMessageSchema = void 0;
+exports.SendIconMessageSchema = exports.GetMessageSchema = exports.SendMessageSchema = void 0;
 const yup = __importStar(require("yup"));
 const constants_1 = require("../common/constants");
 exports.SendMessageSchema = yup.object().shape({
@@ -41,4 +41,20 @@ exports.SendMessageSchema = yup.object().shape({
 exports.GetMessageSchema = yup.object().shape({
     limit: yup.number().min(1, "Need at least 1").max(30, "Max 30 messages").required("Need a number").typeError('Need a number'),
     offset: yup.number().min(0, "Need at least 0").required("Need a number").typeError('Need a number')
+});
+exports.SendIconMessageSchema = yup.object().shape({
+    id_icon: yup.string().required("Icon required"),
+    id_conversation: yup.string().required("Conversation required"),
+    type: yup
+        .string()
+        .required("Type message required")
+        .test("Wrong message type error", "Wrong message type", (value) => {
+        let pass = false;
+        Object.keys(constants_1.MESSAGE_TYPE).forEach((key) => {
+            if (constants_1.MESSAGE_TYPE[key].toString() === (value === null || value === void 0 ? void 0 : value.toString())) {
+                pass = true;
+            }
+        });
+        return pass;
+    }),
 });

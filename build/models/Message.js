@@ -19,7 +19,16 @@ const generateMessage = (data) => {
         url,
         id_icon,
         content, message_del_flag: data.delFlag, message_create_at: data.createAt, id_user: id_user.toString(), icon: {
-            id_icon, iconUrl, icon_delFlg, blocksOfWidth, blocksOfHeight, width, height, totalFrames, icon_createAt, icon_category
+            id_icon,
+            iconUrl,
+            icon_delFlg,
+            blocksOfWidth,
+            blocksOfHeight,
+            width,
+            height,
+            totalFrames,
+            icon_createAt,
+            icon_category,
         } }), userInfoRest);
 };
 exports.generateMessage = generateMessage;

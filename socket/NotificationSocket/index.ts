@@ -3,7 +3,7 @@ import { SOCKET_ON_ACTIONS } from "../../common/constants";
 import { NotificationSocketActions } from "./actions";
 
 export const NotificationSocket = (namespace: Namespace) => {
-  namespace.once("connection", async (socket: Socket) => {
+  namespace.off("connection",()=>{}).on("connection", async (socket: Socket) => {
     await NotificationSocketActions.initialActions(namespace, socket);
 // console.log(socket.data);
 
