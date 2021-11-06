@@ -146,6 +146,7 @@ class NotificationController {
                     id_owner: userInfo.id_user.toString(),
                     message: message || "",
                 });
+                console.log("daadada");
                 actions_1.NotificationSocketActions.emitNotification(notificationNamespace, constants_1.SOCKET_PREFIX.NOTIFICATION + id_receiver, {
                     id_owner: userInfo.id_user,
                     type: constants_1.NOTIFICATION_TYPE.FRIEND_REQUEST,
@@ -155,6 +156,7 @@ class NotificationController {
                         message,
                     },
                 });
+                res.json({ message: "Ok" });
             }
             catch (err) {
                 (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);

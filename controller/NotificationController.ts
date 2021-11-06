@@ -56,7 +56,6 @@ export class NotificationController {
     const { type, id_receiver, message = null } = req.body;
     const userInfo: DecodedUser = res.locals.decodeToken;
     console.log(req.body);
-
     try {
       const isValid = await CreateNotificationSchema.validate({
         type,
@@ -214,7 +213,7 @@ export class NotificationController {
           id_owner: userInfo.id_user.toString(),
           message: message || "",
         });
-
+console.log("daadada");
       NotificationSocketActions.emitNotification(
         notificationNamespace,
         SOCKET_PREFIX.NOTIFICATION + id_receiver,
@@ -228,6 +227,8 @@ export class NotificationController {
           },
         }
       );
+res.json({message:"Ok"});
+
     } catch (err) {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
