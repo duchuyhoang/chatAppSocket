@@ -55,7 +55,7 @@ export class NotificationController {
   ) {
     const { type, id_receiver, message = null } = req.body;
     const userInfo: DecodedUser = res.locals.decodeToken;
-console.log(req.body);
+    console.log(req.body);
 
     try {
       const isValid = await CreateNotificationSchema.validate({
@@ -66,30 +66,33 @@ console.log(req.body);
       throwValidateError(err, next);
       return;
     }
+    try {
+      const notificationSocket: Namespace =
+        req.app.get(SOCKET_LIST) &&
+        req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.NOTIFICATION];
+      if (!notificationSocket) {
+        throwHttpError("Something wrong", BAD_REQUEST, next);
+      }
 
-    const notificationSocket: Namespace =
-      req.app.get(SOCKET_LIST) &&
-      req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.NOTIFICATION];
-    if (!notificationSocket) {
+      switch (parseInt((type as string).toString())) {
+        case NOTIFICATION_TYPE.FRIEND_REQUEST:
+          this.insertFriendRequest(
+            res,
+            next,
+            notificationSocket,
+            id_receiver,
+            userInfo,
+            message
+          );
+          break;
+
+        default:
+          res
+            .status(BAD_REQUEST)
+            .json({ message: "Server is working on that type" });
+      }
+    } catch (e) {
       throwHttpError("Something wrong", BAD_REQUEST, next);
-    }
-
-    switch (parseInt((type as string).toString())) {
-      case NOTIFICATION_TYPE.FRIEND_REQUEST:
-        this.insertFriendRequest(
-          res,
-          next,
-          notificationSocket,
-          id_receiver,
-          userInfo,
-          message
-        );
-        break;
-
-      default:
-        res
-          .status(BAD_REQUEST)
-          .json({ message: "Server is working on that type" });
     }
   }
 

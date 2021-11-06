@@ -52,19 +52,24 @@ class NotificationController {
                 (0, functions_1.throwValidateError)(err, next);
                 return;
             }
-            const notificationSocket = req.app.get(constants_1.SOCKET_LIST) &&
-                req.app.get(constants_1.SOCKET_LIST)[constants_1.SOCKET_NAMESPACE.NOTIFICATION];
-            if (!notificationSocket) {
-                (0, functions_1.throwHttpError)("Something wrong", constants_1.BAD_REQUEST, next);
+            try {
+                const notificationSocket = req.app.get(constants_1.SOCKET_LIST) &&
+                    req.app.get(constants_1.SOCKET_LIST)[constants_1.SOCKET_NAMESPACE.NOTIFICATION];
+                if (!notificationSocket) {
+                    (0, functions_1.throwHttpError)("Something wrong", constants_1.BAD_REQUEST, next);
+                }
+                switch (parseInt(type.toString())) {
+                    case constants_1.NOTIFICATION_TYPE.FRIEND_REQUEST:
+                        this.insertFriendRequest(res, next, notificationSocket, id_receiver, userInfo, message);
+                        break;
+                    default:
+                        res
+                            .status(constants_1.BAD_REQUEST)
+                            .json({ message: "Server is working on that type" });
+                }
             }
-            switch (parseInt(type.toString())) {
-                case constants_1.NOTIFICATION_TYPE.FRIEND_REQUEST:
-                    this.insertFriendRequest(res, next, notificationSocket, id_receiver, userInfo, message);
-                    break;
-                default:
-                    res
-                        .status(constants_1.BAD_REQUEST)
-                        .json({ message: "Server is working on that type" });
+            catch (e) {
+                (0, functions_1.throwHttpError)("Something wrong", constants_1.BAD_REQUEST, next);
             }
         });
     }
