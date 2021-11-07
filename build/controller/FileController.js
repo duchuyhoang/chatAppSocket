@@ -19,6 +19,8 @@ class FileControler {
         this.FileDao = new FileDao_1.FileDao();
         this.getIconById = this.getIconById.bind(this);
         this.insertIcon = this.insertIcon.bind(this);
+        this.getListIconCategory = this.getListIconCategory.bind(this);
+        this.getIconByCategory = this.getIconByCategory.bind(this);
     }
     getIconById(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -66,7 +68,7 @@ class FileControler {
                 if (!!req.iconInfo) {
                     const link = yield (0, functions_1.uploadSingle)({
                         file: req.iconInfo[0].originalFile,
-                        newName: req.iconInfo[0].newName
+                        newName: req.iconInfo[0].newName,
                     });
                     try {
                         const result = yield this.FileDao.createIcon({
@@ -90,6 +92,29 @@ class FileControler {
             }
             catch (error) {
                 res.json({ error });
+            }
+        });
+    }
+    getListIconCategory(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const listIconCategory = yield this.FileDao.getListIconCategory();
+                res.json({ data: listIconCategory });
+            }
+            catch (error) {
+                (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
+            }
+        });
+    }
+    getIconByCategory(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id } = req.params;
+            try {
+                const listIcon = yield this.FileDao.getIconByCategory(id);
+                res.json({ data: listIcon });
+            }
+            catch (err) {
+                (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
             }
         });
     }

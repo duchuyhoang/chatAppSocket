@@ -6,6 +6,7 @@ import { IconCreateRequest, IconInfo } from "../TS/File";
 import { FileControler } from "../controller/FileController";
 import {iconUpload} from "../common/multer";
 import path from "path";
+import { verifyToken } from "../middlewares/authenticate";
 const uploadRouter: Router = express.Router();
 
 // const storage = multer.diskStorage({
@@ -33,6 +34,9 @@ uploadRouter.post(
   new FileControler().insertIcon
 );
 
-uploadRouter.get("/getIconById/:id", new FileControler().getIconById);
+uploadRouter.get("/getIconById/:id",verifyToken, new FileControler().getIconById);
+uploadRouter.get("/getIconCategory",verifyToken, new FileControler().getListIconCategory);
+uploadRouter.get("/getIconByCategory/:id",verifyToken,new FileControler().getIconByCategory)
+
 
 export default uploadRouter;

@@ -13,4 +13,5 @@ interface Icon {
   category:Category;
 }
 
+
 export default Icon;

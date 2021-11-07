@@ -18,12 +18,15 @@ import {
   throwHttpError,
   uploadSingle,
 } from "../common/functions";
+import IconCategory from "../models/IconCategory";
 export class FileControler {
   private FileDao: FileDao;
   constructor() {
     this.FileDao = new FileDao();
     this.getIconById = this.getIconById.bind(this);
     this.insertIcon = this.insertIcon.bind(this);
+    this.getListIconCategory = this.getListIconCategory.bind(this);
+    this.getIconByCategory=this.getIconByCategory.bind(this);
   }
 
   public async getIconById(req: Request, res: Response) {
@@ -93,8 +96,8 @@ export class FileControler {
     try {
       if (!!req.iconInfo) {
         const link = await uploadSingle({
-          file:req.iconInfo[0].originalFile,
-          newName: req.iconInfo[0].newName
+          file: req.iconInfo[0].originalFile,
+          newName: req.iconInfo[0].newName,
         });
         try {
           const result = await this.FileDao.createIcon({
@@ -115,6 +118,35 @@ export class FileControler {
       }
     } catch (error) {
       res.json({ error });
+    }
+  }
+
+  public async getListIconCategory(
+    req: IconCreateRequest,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const listIconCategory: IconCategory =
+        await this.FileDao.getListIconCategory();
+      res.json({ data: listIconCategory });
+    } catch (error) {
+      throwHttpError(DB_ERROR, BAD_REQUEST, next);
+    }
+  }
+
+  public async getIconByCategory(
+    req: IconCreateRequest,
+    res: Response,
+    next: NextFunction
+  ) {
+    const { id } = req.params;
+    try{
+      const listIcon = await this.FileDao.getIconByCategory(id);
+      res.json({ data: listIcon });
+    }
+    catch(err){
+      throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
   }
 }

@@ -55,7 +55,6 @@ export class NotificationController {
   ) {
     const { type, id_receiver, message = null } = req.body;
     const userInfo: DecodedUser = res.locals.decodeToken;
-    console.log(req.body);
     try {
       const isValid = await CreateNotificationSchema.validate({
         type,
@@ -71,6 +70,7 @@ export class NotificationController {
         req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.NOTIFICATION];
       if (!notificationSocket) {
         throwHttpError("Something wrong", BAD_REQUEST, next);
+        return;
       }
 
       switch (parseInt((type as string).toString())) {

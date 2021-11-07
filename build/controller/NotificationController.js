@@ -41,7 +41,6 @@ class NotificationController {
         return __awaiter(this, void 0, void 0, function* () {
             const { type, id_receiver, message = null } = req.body;
             const userInfo = res.locals.decodeToken;
-            console.log(req.body);
             try {
                 const isValid = yield Notification_1.CreateNotificationSchema.validate({
                     type,
@@ -57,6 +56,7 @@ class NotificationController {
                     req.app.get(constants_1.SOCKET_LIST)[constants_1.SOCKET_NAMESPACE.NOTIFICATION];
                 if (!notificationSocket) {
                     (0, functions_1.throwHttpError)("Something wrong", constants_1.BAD_REQUEST, next);
+                    return;
                 }
                 switch (parseInt(type.toString())) {
                     case constants_1.NOTIFICATION_TYPE.FRIEND_REQUEST:
