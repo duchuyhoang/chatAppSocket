@@ -115,7 +115,7 @@ export class ConversationController {
       await this.userInConversationDao.addUsersToConversation(data);
 
       const newConversation: ConversationWithCreatorInfo | null =
-        await this.conversationDao.getConversationById(newIdRoom.toString());
+        await this.conversationDao.getConversationById(userInfo.id_user,newIdRoom.toString());
 
       if (newConversation) {
         this.emitJoinRoom(req, parseListUser, newConversation);
@@ -190,7 +190,7 @@ export class ConversationController {
         await this.userInConversationDao.addUsersToConversation(data);
 
         const newConversation: ConversationWithCreatorInfo | null =
-          await this.conversationDao.getConversationById(newIdRoom.toString());
+          await this.conversationDao.getConversationById(userInfo.id_user,newIdRoom.toString());
 
         if (newConversation) {
           const conversationSocket: Namespace =
@@ -261,6 +261,7 @@ export class ConversationController {
     next: NextFunction
   ) {
     const { id_conversation = null } = req.params;
+    const userInfo: DecodedUser = res.locals.decodeToken;
 
     if (!id_conversation) {
       throwNormalError("Conversation required", next);
@@ -270,6 +271,7 @@ export class ConversationController {
     try {
       const conversationInfo: Maybe<ConversationWithCreatorInfo> =
         await this.conversationDao.getConversationById(
+          userInfo.id_user,
           id_conversation.toString()
         );
       if (!conversationInfo) {

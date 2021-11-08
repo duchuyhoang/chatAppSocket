@@ -31,6 +31,7 @@ class ConversationDao extends BaseDao_1.BaseDao {
         user.email as creator_email,user.avatar as creator_avatar,user.phone as creator_phone,user.sex as creator_sex,
         get_count_message(conversation.id_room) as message_count,get_last_message(conversation.id_room) as last_message,
         get_last_message_type(conversation.id_room) as last_message_type,
+        get_next_user_name(conversation.id_room,?,conversation.type) as nextUserName,
         (SELECT GROUP_CONCAT(user.avatar SEPARATOR "****")  
         FROM user_in_conversation INNER JOIN user
         ON conversation.creator=user.id_user WHERE user_in_conversation.id_room=conversation.id_room
@@ -39,7 +40,7 @@ class ConversationDao extends BaseDao_1.BaseDao {
         FROM user_in_conversation 
         INNER JOIN conversation ON user_in_conversation.id_room=conversation.id_room 
         LEFT JOIN user ON conversation.creator=user.id_user
-        WHERE conversation.delFlag=${constants_1.DEL_FLAG.VALID} AND user_in_conversation.id_user=?`, [id_user], (err, result) => {
+        WHERE conversation.delFlag=${constants_1.DEL_FLAG.VALID} AND user_in_conversation.id_user=?`, [id_user, id_user], (err, result) => {
                 if (err)
                     reject(err);
                 else {
@@ -48,7 +49,7 @@ class ConversationDao extends BaseDao_1.BaseDao {
             });
         });
     }
-    getConversationById(id_conversation) {
+    getConversationById(id_user, id_conversation) {
         return new Promise((resolve, reject) => {
             this.db.query(`SELECT conversation.*,
           user.name as creator_name,user.email as creator_email,
@@ -56,6 +57,7 @@ class ConversationDao extends BaseDao_1.BaseDao {
 get_count_message(conversation.id_room) as message_count,
 get_last_message(conversation.id_room) as last_message,
 get_last_message_type(conversation.id_room) as last_message_type,
+get_next_user_name(conversation.id_room,?,conversation.type) as nextUserName,
 (SELECT GROUP_CONCAT(user.avatar SEPARATOR "****")  
         FROM user_in_conversation INNER JOIN user
         ON conversation.creator=user.id_user WHERE user_in_conversation.id_room=conversation.id_room
@@ -63,7 +65,7 @@ get_last_message_type(conversation.id_room) as last_message_type,
         ) as listAvatar
 FROM conversation 
 INNER JOIN user ON conversation.creator=user.id_user
-WHERE conversation.delFlag=0 AND conversation.id_room=? LIMIT 1;`, [id_conversation], (err, result) => {
+WHERE conversation.delFlag=0 AND conversation.id_room=? LIMIT 1;`, [id_user, id_conversation], (err, result) => {
                 if (err)
                     reject(err);
                 if (result.length === 0)

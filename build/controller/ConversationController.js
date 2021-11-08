@@ -80,7 +80,7 @@ class ConversationController {
                     };
                 }), newIdRoom.toString());
                 yield this.userInConversationDao.addUsersToConversation(data);
-                const newConversation = yield this.conversationDao.getConversationById(newIdRoom.toString());
+                const newConversation = yield this.conversationDao.getConversationById(userInfo.id_user, newIdRoom.toString());
                 if (newConversation) {
                     this.emitJoinRoom(req, parseListUser, newConversation);
                     // this.userLastSeenMessageDao.
@@ -122,7 +122,7 @@ class ConversationController {
                     const { insertId: newIdRoom } = yield this.conversationDao.addNewPrivateConversation(userInfo.id_user.toString());
                     const data = (0, functions_1.forBulkInsert)([{ id_user: id_friend }, { id_user: userInfo.id_user.toString() }], newIdRoom.toString());
                     yield this.userInConversationDao.addUsersToConversation(data);
-                    const newConversation = yield this.conversationDao.getConversationById(newIdRoom.toString());
+                    const newConversation = yield this.conversationDao.getConversationById(userInfo.id_user, newIdRoom.toString());
                     if (newConversation) {
                         const conversationSocket = req.app.get(constants_1.SOCKET_LIST)[constants_1.SOCKET_NAMESPACE.CONVERSATION];
                         if (conversationSocket) {
@@ -169,12 +169,13 @@ class ConversationController {
     getConversationById(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             const { id_conversation = null } = req.params;
+            const userInfo = res.locals.decodeToken;
             if (!id_conversation) {
                 (0, functions_1.throwNormalError)("Conversation required", next);
                 return;
             }
             try {
-                const conversationInfo = yield this.conversationDao.getConversationById(id_conversation.toString());
+                const conversationInfo = yield this.conversationDao.getConversationById(userInfo.id_user, id_conversation.toString());
                 if (!conversationInfo) {
                     res.json({
                         conversationInfo,
