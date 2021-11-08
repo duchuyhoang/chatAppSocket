@@ -7,7 +7,7 @@ export interface Conversation{
     type:CONVERSATION_TYPE
     delFlag:DEL_FLAG
     createAt: Maybe<string>
-    creator:int
+    creator:int,
 }
 
 
@@ -18,5 +18,7 @@ export interface ConversationWithCreatorInfo extends Conversation{
     creator_phone:string,
     creator_sex:string,
     last_message:Maybe<string>
+    last_message_type:Maybe<number|string>,
+    listAvatar:Maybe<string>,
     message_count:int
 }

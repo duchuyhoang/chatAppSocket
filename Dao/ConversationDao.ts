@@ -40,12 +40,18 @@ export class ConversationDao extends BaseDao {
     return new Promise<ConversationWithCreatorInfo[]>((resolve, reject) => {
       this.db.query(
         `SELECT conversation.*,user.name as creator_name,
-user.email as creator_email,user.avatar as creator_avatar,user.phone as creator_phone,user.sex as creator_sex,
-get_count_message(conversation.id_room) as message_count,get_last_message(conversation.id_room) as last_message
-FROM user_in_conversation 
-INNER JOIN conversation ON user_in_conversation.id_room=conversation.id_room 
-INNER JOIN user ON conversation.creator=user.id_user
-WHERE conversation.delFlag=${DEL_FLAG.VALID} AND user_in_conversation.id_user=?`,
+        user.email as creator_email,user.avatar as creator_avatar,user.phone as creator_phone,user.sex as creator_sex,
+        get_count_message(conversation.id_room) as message_count,get_last_message(conversation.id_room) as last_message,
+        get_last_message_type(conversation.id_room) as last_message_type,
+        (SELECT GROUP_CONCAT(user.avatar SEPARATOR "****")  
+        FROM user_in_conversation INNER JOIN user
+        ON conversation.creator=user.id_user WHERE user_in_conversation.id_room=conversation.id_room
+        GROUP BY conversation.id_room
+        ) as listAvatar
+        FROM user_in_conversation 
+        INNER JOIN conversation ON user_in_conversation.id_room=conversation.id_room 
+        LEFT JOIN user ON conversation.creator=user.id_user
+        WHERE conversation.delFlag=${DEL_FLAG.VALID} AND user_in_conversation.id_user=?`,
         [id_user],
         (err, result) => {
           if (err) reject(err);
@@ -65,7 +71,13 @@ WHERE conversation.delFlag=${DEL_FLAG.VALID} AND user_in_conversation.id_user=?`
           user.name as creator_name,user.email as creator_email,
           user.avatar as creator_avatar,user.phone as creator_phone,user.sex as creator_sex,
 get_count_message(conversation.id_room) as message_count,
-get_last_message(conversation.id_room) as last_message
+get_last_message(conversation.id_room) as last_message,
+get_last_message_type(conversation.id_room) as last_message_type,
+(SELECT GROUP_CONCAT(user.avatar SEPARATOR "****")  
+        FROM user_in_conversation INNER JOIN user
+        ON conversation.creator=user.id_user WHERE user_in_conversation.id_room=conversation.id_room
+        GROUP BY conversation.id_room
+        ) as listAvatar
 FROM conversation 
 INNER JOIN user ON conversation.creator=user.id_user
 WHERE conversation.delFlag=0 AND conversation.id_room=? LIMIT 1;`,
