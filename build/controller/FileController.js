@@ -72,7 +72,7 @@ class FileControler {
                     });
                     try {
                         const result = yield this.FileDao.createIcon({
-                            url: link,
+                            iconUrl: link,
                             blocksOfWidth,
                             blocksOfHeight,
                             width,

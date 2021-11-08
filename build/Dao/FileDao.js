@@ -32,7 +32,7 @@ class FileDao extends BaseDao_1.BaseDao {
                 else {
                     resolve(result.map((icon) => ({
                         id_icon: icon.id_icon,
-                        url: icon.url,
+                        iconUrl: icon.iconUrl,
                         delFlag: icon.delFlag,
                         blocksOfWidth: icon.blocksOfWidth,
                         blocksOfHeight: icon.blocksOfHeight,
@@ -67,7 +67,7 @@ class FileDao extends BaseDao_1.BaseDao {
                         const icon = result[0];
                         resolve({
                             id_icon: icon.id_icon,
-                            url: icon.url,
+                            iconUrl: icon.iconUrl,
                             delFlag: icon.delFlag,
                             blocksOfWidth: icon.blocksOfWidth,
                             blocksOfHeight: icon.blocksOfHeight,
@@ -93,10 +93,10 @@ class FileDao extends BaseDao_1.BaseDao {
     }
     createIcon(iconInfo) {
         return new Promise((resolve, reject) => {
-            const { url, blocksOfWidth, blocksOfHeight, width, height, totalFrames, categoryCd, } = iconInfo;
+            const { iconUrl, blocksOfWidth, blocksOfHeight, width, height, totalFrames, categoryCd, } = iconInfo;
             this.db.query(`INSERT INTO icon(iconUrl,blocksOfWidth,blocksOfHeight,width,height,totalFrames,createAt,category) 
     VALUES(?,?,?,?,?,?,now(),?)`, [
-                url,
+                iconUrl,
                 blocksOfWidth,
                 blocksOfHeight,
                 width,

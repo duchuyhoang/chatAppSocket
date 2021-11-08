@@ -2,7 +2,7 @@ import Category from "./IconCategory";
 
 interface Icon {
   id_icon: number;
-  url: string;
+  iconUrl: string;
   delFlag: number;
   blocksOfWidth: number;
   blocksOfHeight: number;

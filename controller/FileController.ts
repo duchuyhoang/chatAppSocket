@@ -101,7 +101,7 @@ export class FileControler {
         });
         try {
           const result = await this.FileDao.createIcon({
-            url: link,
+            iconUrl: link,
             blocksOfWidth,
             blocksOfHeight,
             width,
