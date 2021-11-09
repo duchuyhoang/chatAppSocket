@@ -24,27 +24,30 @@ const FileDao_1 = require("../Dao/FileDao");
 class MessageController {
     constructor() {
         this.emitMessage = (req, listUser, userInfo, id_conversation, notificationEmitData, messageEmitData) => {
-            const notificationSocket = req.app.get(constants_1.SOCKET_LIST)[constants_1.SOCKET_NAMESPACE.NOTIFICATION];
-            const conversationSocket = req.app.get(constants_1.SOCKET_LIST)[constants_1.SOCKET_NAMESPACE.CONVERSATION];
+            var _a, _b;
+            const notificationSocket = (_a = req.app.get(constants_1.SOCKET_LIST)) === null || _a === void 0 ? void 0 : _a[constants_1.SOCKET_NAMESPACE.NOTIFICATION];
+            const conversationSocket = (_b = req.app.get(constants_1.SOCKET_LIST)) === null || _b === void 0 ? void 0 : _b[constants_1.SOCKET_NAMESPACE.CONVERSATION];
             // Emit notification for each user in room
-            listUser.forEach((user) => {
-                if (user.status === constants_1.USER_IN_ROOM_STATUS.NORMAL &&
-                    user.id_user.toString() !== userInfo.id_user.toString()) {
-                    actions_1.NotificationSocketActions.emitNotification(notificationSocket, constants_1.SOCKET_PREFIX.NOTIFICATION + user.id_user, {
-                        type: constants_1.NOTIFICATION_TYPE.NEW_MESSAGE,
-                        id_owner: userInfo.id_user,
-                        data: Object.assign({}, notificationEmitData),
-                        createAt: new Date().toISOString(),
-                    });
-                }
-            });
-            // Message emit
-            actions_2.RoomSocketActions.emitMessageToConversation(conversationSocket, id_conversation, {
-                id_owner: userInfo.id_user.toString(),
-                messageType: constants_1.MESSAGE_TYPE.TEXT,
-                createAt: new Date().toISOString(),
-                data: messageEmitData,
-            });
+            if (notificationSocket && conversationSocket) {
+                listUser.forEach((user) => {
+                    if (user.status === constants_1.USER_IN_ROOM_STATUS.NORMAL &&
+                        user.id_user.toString() !== userInfo.id_user.toString()) {
+                        actions_1.NotificationSocketActions.emitNotification(notificationSocket, constants_1.SOCKET_PREFIX.NOTIFICATION + user.id_user, {
+                            type: constants_1.NOTIFICATION_TYPE.NEW_MESSAGE,
+                            id_owner: userInfo.id_user,
+                            data: Object.assign({}, notificationEmitData),
+                            createAt: new Date().toISOString(),
+                        });
+                    }
+                });
+                // Message emit
+                actions_2.RoomSocketActions.emitMessageToConversation(conversationSocket, id_conversation, {
+                    id_owner: userInfo.id_user.toString(),
+                    messageType: constants_1.MESSAGE_TYPE.TEXT,
+                    createAt: new Date().toISOString(),
+                    data: messageEmitData,
+                });
+            }
         };
         this.messageDao = new MessageDao_1.MessageDao();
         this.fileDao = new FileDao_1.FileDao();

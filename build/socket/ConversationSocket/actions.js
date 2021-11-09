@@ -47,7 +47,7 @@ exports.RoomSocketActions = {
     handleRoomGroup: (namespace, listUser, newConversation) => __awaiter(void 0, void 0, void 0, function* () {
         namespace.sockets.forEach((socket) => {
             const userInfo = socket.data.decode;
-            if (listUser.indexOf(userInfo.id_user.toString()) != -1) {
+            if (listUser.map((id) => id.toString()).indexOf(userInfo.id_user.toString()) != -1) {
                 // Join new room
                 socket.join(constants_1.SOCKET_PREFIX.CONVERSATION + newConversation.id_room);
                 // update list user and their room

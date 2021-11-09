@@ -69,47 +69,33 @@ class ConversationController {
                 (0, functions_1.throwValidateError)(error, next);
                 return;
             }
-            console.log(title, list_user);
-            res.json({ message: "ok" });
-            // try {
-            //   const userInfo = res.locals.decodeToken;
-            //   const { insertId: newIdRoom }: OkPacket =
-            //     await this.conversationDao.addNewGroupConversation(
-            //       title,
-            //       userInfo.id_user
-            //     );
-            //   const parseListUser: string[] = JSON.parse(list_user);
-            //   parseListUser.indexOf(userInfo.id_user) === -1 &&
-            //     parseListUser.push(userInfo.id_user);
-            //   const data = forBulkInsert<{ id_user: string }>(
-            //     parseListUser.map((id_user: string) => {
-            //       return {
-            //         id_user: id_user,
-            //       };
-            //     }),
-            //     newIdRoom.toString()
-            //   );
-            //   await this.userInConversationDao.addUsersToConversation(data);
-            //   const newConversation: ConversationWithCreatorInfo | null =
-            //     await this.conversationDao.getConversationById(
-            //       userInfo.id_user,
-            //       newIdRoom.toString()
-            //     );
-            //   if (newConversation) {
-            //     this.emitJoinRoom(req, parseListUser, newConversation);
-            //     // this.userLastSeenMessageDao.
-            //     const listUserToConversation = [
-            //       ...parseListUser.map((id) =>
-            //         this.userLastSeenMessageDao.addUserToRoom(newIdRoom.toString(), id)
-            //       ),
-            //     ];
-            //     await Promise.all([listUserToConversation]);
-            //   }
-            //   res.json({ newRoom: newConversation });
-            // } catch (error) {
-            //   throwHttpError(DB_ERROR, BAD_REQUEST, next);
-            //   return;
-            // }
+            try {
+                const userInfo = res.locals.decodeToken;
+                const { insertId: newIdRoom } = yield this.conversationDao.addNewGroupConversation(title, userInfo.id_user);
+                const parseListUser = list_user;
+                parseListUser.indexOf(userInfo.id_user) === -1 &&
+                    parseListUser.push(userInfo.id_user);
+                const data = (0, functions_1.forBulkInsert)(parseListUser.map((id_user) => {
+                    return {
+                        id_user: id_user,
+                    };
+                }), newIdRoom.toString());
+                yield this.userInConversationDao.addUsersToConversation(data);
+                const newConversation = yield this.conversationDao.getConversationById(userInfo.id_user, newIdRoom.toString());
+                if (newConversation) {
+                    this.emitJoinRoom(req, parseListUser, newConversation);
+                    const listUserToConversation = [
+                        ...parseListUser.map((id) => this.userLastSeenMessageDao.addUserToRoom(newIdRoom.toString(), id)),
+                    ];
+                    yield Promise.all([listUserToConversation]);
+                }
+                res.json({ newRoom: newConversation });
+            }
+            catch (error) {
+                console.log(error);
+                (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
+                return;
+            }
         });
     }
     emitJoinRoom(req, listUser, newConversation) {

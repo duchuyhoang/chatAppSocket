@@ -71,13 +71,14 @@ export const RoomSocketActions = {
 
     namespace.sockets.forEach((socket: Socket) => {
       const userInfo: DecodedUser = socket.data.decode;
-      if (listUser.indexOf(userInfo.id_user.toString()) != -1) {
+      if (listUser.map((id)=>id.toString()).indexOf(userInfo.id_user.toString()) != -1) {
         // Join new room
         socket.join(SOCKET_PREFIX.CONVERSATION + newConversation.id_room);
         // update list user and their room
         userInRoom[SOCKET_PREFIX.USER + userInfo.id_user].push(
           SOCKET_PREFIX.CONVERSATION + newConversation.id_room
         );
+               
         // Emit to matched socket to join new room
         namespace
           .in(socket.id)

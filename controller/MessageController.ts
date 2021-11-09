@@ -63,43 +63,45 @@ export class MessageController {
     messageEmitData: IQueryMessage | IQueryMessage[]
   ) => {
     const notificationSocket: Namespace =
-      req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.NOTIFICATION];
+      req.app.get(SOCKET_LIST)?.[SOCKET_NAMESPACE.NOTIFICATION];
     const conversationSocket: Namespace =
-      req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.CONVERSATION];
+      req.app.get(SOCKET_LIST)?.[SOCKET_NAMESPACE.CONVERSATION];
 
     // Emit notification for each user in room
-    listUser.forEach((user) => {
-      if (
-        user.status === USER_IN_ROOM_STATUS.NORMAL &&
-        user.id_user.toString() !== userInfo.id_user.toString()
-      ) {
-        NotificationSocketActions.emitNotification(
-          notificationSocket,
-          SOCKET_PREFIX.NOTIFICATION + user.id_user,
-          {
-            type: NOTIFICATION_TYPE.NEW_MESSAGE,
-            id_owner: userInfo.id_user,
-            data: {
-              ...notificationEmitData,
-              // messageType: MESSAGE_TYPE.TEXT,
-              // content,
-            },
-            createAt: new Date().toISOString(),
-          }
-        );
-      }
-    });
-    // Message emit
-    RoomSocketActions.emitMessageToConversation(
-      conversationSocket,
-      id_conversation,
-      {
-        id_owner: userInfo.id_user.toString(),
-        messageType: MESSAGE_TYPE.TEXT,
-        createAt: new Date().toISOString(),
-        data: messageEmitData,
-      }
-    );
+    if (notificationSocket && conversationSocket) {
+      listUser.forEach((user) => {
+        if (
+          user.status === USER_IN_ROOM_STATUS.NORMAL &&
+          user.id_user.toString() !== userInfo.id_user.toString()
+        ) {
+          NotificationSocketActions.emitNotification(
+            notificationSocket,
+            SOCKET_PREFIX.NOTIFICATION + user.id_user,
+            {
+              type: NOTIFICATION_TYPE.NEW_MESSAGE,
+              id_owner: userInfo.id_user,
+              data: {
+                ...notificationEmitData,
+                // messageType: MESSAGE_TYPE.TEXT,
+                // content,
+              },
+              createAt: new Date().toISOString(),
+            }
+          );
+        }
+      });
+      // Message emit
+      RoomSocketActions.emitMessageToConversation(
+        conversationSocket,
+        id_conversation,
+        {
+          id_owner: userInfo.id_user.toString(),
+          messageType: MESSAGE_TYPE.TEXT,
+          createAt: new Date().toISOString(),
+          data: messageEmitData,
+        }
+      );
+    }
   };
 
   public async insertNewMessage(
@@ -129,7 +131,7 @@ export class MessageController {
         break;
 
       case MESSAGE_TYPE.ICON.toString():
-        await this.insertIconMessage(req,res,next,listUser);
+        await this.insertIconMessage(req, res, next, listUser);
         break;
       case MESSAGE_TYPE.TEXT_AND_IMAGE.toString():
         await this.insertTextAndMessage(req, res, next, listUser);
@@ -583,7 +585,6 @@ export class MessageController {
       listMessage = await this.messageDao.getMessageByConversation(
         id_conversation?.toString() || ""
       );
-  
 
       res.json({
         ...Pagination(

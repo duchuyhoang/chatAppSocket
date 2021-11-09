@@ -46,7 +46,7 @@ export class ConversationDao extends BaseDao {
         get_next_user_name(conversation.id_room,?,conversation.type) as nextUserName,
         (SELECT GROUP_CONCAT(user.avatar SEPARATOR "****")  
         FROM user_in_conversation INNER JOIN user
-        ON conversation.creator=user.id_user WHERE user_in_conversation.id_room=conversation.id_room
+        ON user_in_conversation.id_user=user.id_user WHERE user_in_conversation.id_room=conversation.id_room
         GROUP BY conversation.id_room
         ) as listAvatar
         FROM user_in_conversation 
@@ -77,12 +77,12 @@ get_last_message_type(conversation.id_room) as last_message_type,
 get_next_user_name(conversation.id_room,?,conversation.type) as nextUserName,
 (SELECT GROUP_CONCAT(user.avatar SEPARATOR "****")  
         FROM user_in_conversation INNER JOIN user
-        ON conversation.creator=user.id_user WHERE user_in_conversation.id_room=conversation.id_room
+        ON user_in_conversation.id_user=user.id_user WHERE user_in_conversation.id_room=conversation.id_room
         GROUP BY conversation.id_room
         ) as listAvatar
 FROM conversation 
 INNER JOIN user ON conversation.creator=user.id_user
-WHERE conversation.delFlag=0 AND conversation.id_room=? LIMIT 1;`,
+WHERE conversation.delFlag=${DEL_FLAG.VALID} AND conversation.id_room=? LIMIT 1;`,
           [id_user,id_conversation],
           (err, result) => {
             if (err) reject(err);
