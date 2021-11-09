@@ -129,6 +129,7 @@ export class MessageController {
         break;
 
       case MESSAGE_TYPE.ICON.toString():
+        await this.insertIconMessage(req,res,next,listUser);
         break;
       case MESSAGE_TYPE.TEXT_AND_IMAGE.toString():
         await this.insertTextAndMessage(req, res, next, listUser);

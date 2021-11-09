@@ -68,20 +68,20 @@ export const RoomSocketActions = {
     listUser: string[],
     newConversation: ConversationWithCreatorInfo
   ) => {
+
     namespace.sockets.forEach((socket: Socket) => {
       const userInfo: DecodedUser = socket.data.decode;
-      if (listUser.indexOf(userInfo.id_user.toString()) != 1) {
+      if (listUser.indexOf(userInfo.id_user.toString()) != -1) {
         // Join new room
         socket.join(SOCKET_PREFIX.CONVERSATION + newConversation.id_room);
         // update list user and their room
         userInRoom[SOCKET_PREFIX.USER + userInfo.id_user].push(
           SOCKET_PREFIX.CONVERSATION + newConversation.id_room
         );
-
         // Emit to matched socket to join new room
         namespace
           .in(socket.id)
-          .emit(SOCKET_EMIT_ACTIONS.JOIN_NEW_ROOM, newConversation);
+          .emit(SOCKET_EMIT_ACTIONS.JOIN_NEW_ROOM, { newConversation });
       }
     });
   },

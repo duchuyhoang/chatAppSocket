@@ -10,7 +10,7 @@ const ConversationController_1 = require("../controller/ConversationController")
 const roomMiddlewares_1 = require("../middlewares/roomMiddlewares");
 const conversationRouter = express_1.default.Router();
 const upload = (0, multer_1.default)();
-conversationRouter.post("/createGroupChat", authenticate_1.verifyToken, upload.none(), new ConversationController_1.ConversationController().createGroupConversation);
+conversationRouter.post("/createGroupChat", authenticate_1.verifyToken, new ConversationController_1.ConversationController().createGroupConversation);
 conversationRouter.post("/createPrivateChat", authenticate_1.verifyToken, upload.none(), new ConversationController_1.ConversationController().createPrivateConversation);
 conversationRouter.post("/checkPrivateMessage", authenticate_1.verifyToken, new ConversationController_1.ConversationController().checkPrivateConversationBetween);
 conversationRouter.get("/getConversations", authenticate_1.verifyToken, new ConversationController_1.ConversationController().getConversations);

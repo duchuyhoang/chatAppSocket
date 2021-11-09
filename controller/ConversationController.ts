@@ -147,6 +147,8 @@ export class ConversationController {
     listUser: string[],
     newConversation: ConversationWithCreatorInfo
   ) {
+    console.log(listUser);
+
     const conversationSocket: Namespace =
       req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.CONVERSATION];
 
@@ -365,7 +367,9 @@ export class ConversationController {
     }
     try {
       // const parseListUser: string[] = JSON.parse(list_user);
-      const parseListUser: string[] = list_user.map((id:number)=>id.toString());
+      const parseListUser: string[] = list_user.map((id: number) =>
+        id.toString()
+      );
       const listCurrentUserInRoom = await (
         await this.userInConversationDao.getAllConversationUser(id_room)
       ).map((user) => user.id_user.toString());
@@ -375,6 +379,7 @@ export class ConversationController {
         if (listCurrentUserInRoom.indexOf(userId.toString()) !== -1)
           parseListUser.splice(index, 1);
       });
+      console.log("da", parseListUser);
 
       const data = forBulkInsert<{ id_user: string }>(
         parseListUser.map((id_user: string) => {
@@ -413,7 +418,7 @@ export class ConversationController {
       // listCurrentUserInRoom.forEach((userId))
     } catch (error) {
       console.log(error);
-      
+
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
   }

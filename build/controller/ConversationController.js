@@ -99,6 +99,7 @@ class ConversationController {
         });
     }
     emitJoinRoom(req, listUser, newConversation) {
+        console.log(listUser);
         const conversationSocket = req.app.get(constants_1.SOCKET_LIST)[constants_1.SOCKET_NAMESPACE.CONVERSATION];
         if (conversationSocket) {
             actions_1.RoomSocketActions.handleRoomGroup(conversationSocket, listUser, newConversation);
@@ -243,6 +244,7 @@ class ConversationController {
                     if (listCurrentUserInRoom.indexOf(userId.toString()) !== -1)
                         parseListUser.splice(index, 1);
                 });
+                console.log("da", parseListUser);
                 const data = (0, functions_1.forBulkInsert)(parseListUser.map((id_user) => {
                     return {
                         id_user: id_user,

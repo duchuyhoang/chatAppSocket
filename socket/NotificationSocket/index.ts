@@ -7,12 +7,12 @@ export const NotificationSocket = (namespace: Namespace) => {
     await NotificationSocketActions.initialActions(namespace, socket);
 // console.log(socket.data);
 
-    socket.on(
+    socket.off(SOCKET_ON_ACTIONS.ON_DISCONNECT,()=>{}).on(
       SOCKET_ON_ACTIONS.ON_DISCONNECT,
       NotificationSocketActions.onDisconnect(namespace, socket)
     );
 
-    socket.on("disconnect", () => {
+    socket.off("disconnect",()=>{}).on("disconnect", () => {
       socket.removeAllListeners();
        //   socket.disconnect();
      });

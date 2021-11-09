@@ -4,12 +4,12 @@ export const ConversationCreateGroupChatSchema = yup.object().shape({
   title: yup.string().required("Need title"),
   // creator: yup.string().required("Creator required"),
   list_user: yup
-    .string()
+    .array()
     .required("Need list user")
     .test("listUser", "List user wrong", (list_user: any) => {
       try {
-        const list = JSON.parse(list_user);
-        return Array.isArray(list) && list?.length > 0;
+        // const list = JSON.parse(list_user);
+        return Array.isArray(list_user) && list_user?.length > 0;
       } catch (error) {
         return false;
       }

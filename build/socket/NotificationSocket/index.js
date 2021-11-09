@@ -16,8 +16,8 @@ const NotificationSocket = (namespace) => {
     namespace.off("connection", () => { }).on("connection", (socket) => __awaiter(void 0, void 0, void 0, function* () {
         yield actions_1.NotificationSocketActions.initialActions(namespace, socket);
         // console.log(socket.data);
-        socket.on(constants_1.SOCKET_ON_ACTIONS.ON_DISCONNECT, actions_1.NotificationSocketActions.onDisconnect(namespace, socket));
-        socket.on("disconnect", () => {
+        socket.off(constants_1.SOCKET_ON_ACTIONS.ON_DISCONNECT, () => { }).on(constants_1.SOCKET_ON_ACTIONS.ON_DISCONNECT, actions_1.NotificationSocketActions.onDisconnect(namespace, socket));
+        socket.off("disconnect", () => { }).on("disconnect", () => {
             socket.removeAllListeners();
             //   socket.disconnect();
         });

@@ -71,6 +71,7 @@ class MessageController {
                     yield this.insertImageMessage(req, res, next, listUser);
                     break;
                 case constants_1.MESSAGE_TYPE.ICON.toString():
+                    yield this.insertIconMessage(req, res, next, listUser);
                     break;
                 case constants_1.MESSAGE_TYPE.TEXT_AND_IMAGE.toString():
                     yield this.insertTextAndMessage(req, res, next, listUser);
