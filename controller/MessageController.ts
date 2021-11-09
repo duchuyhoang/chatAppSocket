@@ -369,7 +369,7 @@ export class MessageController {
         type: MESSAGE_TYPE.ICON,
         userInfo,
         id_icon: selectedIcon.id_icon.toString(),
-        iconUrl: selectedIcon.category.id.toString(),
+        iconUrl: selectedIcon.iconUrl,
         icon_delFlg: selectedIcon.delFlag,
         blocksOfWidth: selectedIcon.blocksOfWidth,
         blocksOfHeight: selectedIcon.blocksOfHeight,

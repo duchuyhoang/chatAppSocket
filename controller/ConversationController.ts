@@ -93,53 +93,56 @@ export class ConversationController {
       throwValidateError(error, next);
       return;
     }
+    console.log(title, list_user);
 
-    try {
-      const userInfo = res.locals.decodeToken;
-      const { insertId: newIdRoom }: OkPacket =
-        await this.conversationDao.addNewGroupConversation(
-          title,
-          userInfo.id_user
-        );
-      const parseListUser: string[] = JSON.parse(list_user);
+    res.json({ message: "ok" });
 
-      parseListUser.indexOf(userInfo.id_user) === -1 &&
-        parseListUser.push(userInfo.id_user);
+    // try {
+    //   const userInfo = res.locals.decodeToken;
+    //   const { insertId: newIdRoom }: OkPacket =
+    //     await this.conversationDao.addNewGroupConversation(
+    //       title,
+    //       userInfo.id_user
+    //     );
+    //   const parseListUser: string[] = JSON.parse(list_user);
 
-      const data = forBulkInsert<{ id_user: string }>(
-        parseListUser.map((id_user: string) => {
-          return {
-            id_user: id_user,
-          };
-        }),
-        newIdRoom.toString()
-      );
+    //   parseListUser.indexOf(userInfo.id_user) === -1 &&
+    //     parseListUser.push(userInfo.id_user);
 
-      await this.userInConversationDao.addUsersToConversation(data);
+    //   const data = forBulkInsert<{ id_user: string }>(
+    //     parseListUser.map((id_user: string) => {
+    //       return {
+    //         id_user: id_user,
+    //       };
+    //     }),
+    //     newIdRoom.toString()
+    //   );
 
-      const newConversation: ConversationWithCreatorInfo | null =
-        await this.conversationDao.getConversationById(
-          userInfo.id_user,
-          newIdRoom.toString()
-        );
+    //   await this.userInConversationDao.addUsersToConversation(data);
 
-      if (newConversation) {
-        this.emitJoinRoom(req, parseListUser, newConversation);
+    //   const newConversation: ConversationWithCreatorInfo | null =
+    //     await this.conversationDao.getConversationById(
+    //       userInfo.id_user,
+    //       newIdRoom.toString()
+    //     );
 
-        // this.userLastSeenMessageDao.
-        const listUserToConversation = [
-          ...parseListUser.map((id) =>
-            this.userLastSeenMessageDao.addUserToRoom(newIdRoom.toString(), id)
-          ),
-        ];
-        await Promise.all([listUserToConversation]);
-      }
+    //   if (newConversation) {
+    //     this.emitJoinRoom(req, parseListUser, newConversation);
 
-      res.json({ newRoom: newConversation });
-    } catch (error) {
-      throwHttpError(DB_ERROR, BAD_REQUEST, next);
-      return;
-    }
+    //     // this.userLastSeenMessageDao.
+    //     const listUserToConversation = [
+    //       ...parseListUser.map((id) =>
+    //         this.userLastSeenMessageDao.addUserToRoom(newIdRoom.toString(), id)
+    //       ),
+    //     ];
+    //     await Promise.all([listUserToConversation]);
+    //   }
+
+    //   res.json({ newRoom: newConversation });
+    // } catch (error) {
+    //   throwHttpError(DB_ERROR, BAD_REQUEST, next);
+    //   return;
+    // }
   }
 
   private emitJoinRoom(
@@ -147,8 +150,6 @@ export class ConversationController {
     listUser: string[],
     newConversation: ConversationWithCreatorInfo
   ) {
-    console.log(listUser);
-
     const conversationSocket: Namespace =
       req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.CONVERSATION];
 
@@ -409,6 +410,16 @@ export class ConversationController {
         this.emitNewUsersJoin(req, listNewUser, id_room);
 
         this.emitJoinRoom(req, parseListUser, currentConversation);
+
+        const listUserToConversation = [
+          ...parseListUser.map((id) =>
+            this.userLastSeenMessageDao.addUserToRoom(
+              currentConversation.id_room.toString(),
+              id
+            )
+          ),
+        ];
+        await Promise.all([listUserToConversation]);
       }
 
       res.json({
