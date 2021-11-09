@@ -12,6 +12,7 @@ import {
   ConversationCreateGroupChatSchema,
   ConversationCreatePrivateChatSchema,
   ConversationCheckPrivateChatExistSchema,
+  ConversationAddUsersSchema,
 } from "../validations/Conversation";
 import {
   BAD_REQUEST,
@@ -25,6 +26,7 @@ import { RoomSocketActions } from "../socket/ConversationSocket/actions";
 import { Namespace } from "socket.io";
 import { UserLastSeenMessageDao } from "../Dao/UserLastSeenMessageDao";
 import { Maybe } from "yup/lib/types";
+import { UserInConversation } from "../models/UserInConversation";
 
 export class ConversationController {
   private conversationDao: ConversationDao;
@@ -40,6 +42,7 @@ export class ConversationController {
       this.checkPrivateConversationBetween.bind(this);
     this.getConversations = this.getConversations.bind(this);
     this.getConversationById = this.getConversationById.bind(this);
+    this.addUsersToConversation = this.addUsersToConversation.bind(this);
   }
 
   public async checkPrivateConversationBetween(
@@ -115,7 +118,10 @@ export class ConversationController {
       await this.userInConversationDao.addUsersToConversation(data);
 
       const newConversation: ConversationWithCreatorInfo | null =
-        await this.conversationDao.getConversationById(userInfo.id_user,newIdRoom.toString());
+        await this.conversationDao.getConversationById(
+          userInfo.id_user,
+          newIdRoom.toString()
+        );
 
       if (newConversation) {
         this.emitJoinRoom(req, parseListUser, newConversation);
@@ -151,6 +157,25 @@ export class ConversationController {
         newConversation
       );
     }
+  }
+
+  private emitNewUsersJoin(
+    req: Request,
+    listNewUser: UserInConversation[],
+    id_room: string
+  ) {
+    try {
+      const conversationSocket: Namespace =
+        req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.CONVERSATION];
+
+      if (conversationSocket) {
+        RoomSocketActions.emitNewUsersJoinRoom(
+          conversationSocket,
+          listNewUser,
+          id_room
+        );
+      }
+    } catch (error) {}
   }
 
   public async createPrivateConversation(
@@ -190,7 +215,10 @@ export class ConversationController {
         await this.userInConversationDao.addUsersToConversation(data);
 
         const newConversation: ConversationWithCreatorInfo | null =
-          await this.conversationDao.getConversationById(userInfo.id_user,newIdRoom.toString());
+          await this.conversationDao.getConversationById(
+            userInfo.id_user,
+            newIdRoom.toString()
+          );
 
         if (newConversation) {
           const conversationSocket: Namespace =
@@ -296,8 +324,6 @@ export class ConversationController {
         });
       }
     } catch (error) {
-      console.log(error);
-
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
   }
@@ -321,7 +347,76 @@ export class ConversationController {
     }
   }
 
+  public async addUsersToConversation(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    const { id_room, list_user } = req.body;
+    const userInfo: DecodedUser = res.locals.decodeToken;
+    try {
+      const isValid = await ConversationAddUsersSchema.validate({
+        id_room,
+        list_user,
+      });
+    } catch (error: any) {
+      throwValidateError(error, next);
+      return;
+    }
+    try {
+      // const parseListUser: string[] = JSON.parse(list_user);
+      const parseListUser: string[] = list_user.map((id:number)=>id.toString());
+      const listCurrentUserInRoom = await (
+        await this.userInConversationDao.getAllConversationUser(id_room)
+      ).map((user) => user.id_user.toString());
 
-// public async getListSocketUserChat
+      // Filter list user
+      parseListUser.forEach((userId, index) => {
+        if (listCurrentUserInRoom.indexOf(userId.toString()) !== -1)
+          parseListUser.splice(index, 1);
+      });
 
+      const data = forBulkInsert<{ id_user: string }>(
+        parseListUser.map((id_user: string) => {
+          return {
+            id_user: id_user,
+          };
+        }),
+        id_room.toString()
+      );
+
+      await this.userInConversationDao.addUsersToConversation(data);
+
+      const currentConversation =
+        await this.conversationDao.getConversationById(
+          userInfo.id_user,
+          id_room
+        );
+
+      if (currentConversation) {
+        const listUserInRoom =
+          await this.userInConversationDao.getAllConversationUser(id_room);
+        const listNewUser = listUserInRoom.filter(
+          (user) => parseListUser.indexOf(user.id_user.toString()) !== -1
+        );
+
+        // Emit to all user in this room that someone join their room
+        this.emitNewUsersJoin(req, listNewUser, id_room);
+
+        this.emitJoinRoom(req, parseListUser, currentConversation);
+      }
+
+      res.json({
+        message: "Success",
+      });
+
+      // listCurrentUserInRoom.forEach((userId))
+    } catch (error) {
+      console.log(error);
+      
+      throwHttpError(DB_ERROR, BAD_REQUEST, next);
+    }
+  }
+
+  // public async getListSocketUserChat
 }

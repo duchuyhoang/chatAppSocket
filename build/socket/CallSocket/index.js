@@ -11,10 +11,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CallSocket = void 0;
 const constants_1 = require("../../common/constants");
+const userSockets = {};
 const CallSocket = (namespace) => {
     namespace
         // .off("connection", () => {})
         .on("connection", (socket) => {
+        // userSockets;
+        // socket.on("join chat",(data)=>{
+        //   const {userInfo,id_conversation}=data;
+        // })
         socket.on(constants_1.SOCKET_ON_ACTIONS.ON_GET_LIST_USER_IN_ROOM, ({ id_conversation }) => __awaiter(void 0, void 0, void 0, function* () {
             const socketList = [];
             yield socket.join(constants_1.SOCKET_PREFIX.CALL_CHAT + id_conversation);
@@ -100,7 +105,9 @@ const CallSocket = (namespace) => {
                 .emit("user accepted share screen", { socketId, peerId });
         });
         socket.on("stop share", ({ socketId, id_room }) => {
-            socket.broadcast.to(constants_1.SOCKET_PREFIX.CALL_CHAT + id_room).emit("user stop share", { socketId });
+            socket.broadcast
+                .to(constants_1.SOCKET_PREFIX.CALL_CHAT + id_room)
+                .emit("user stop share", { socketId });
         });
         socket.on("disconnect", () => {
             // console.log("diss");

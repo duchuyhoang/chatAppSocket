@@ -10,7 +10,6 @@ export const ConversationSocket = (namespace: Namespace) => {
       await RoomSocketActions.initialActions(namespace, socket);
       namespace.removeAllListeners();
       socket.on("disconnect", () => {
-        console.log("dis");
         socket.removeAllListeners("connection");
         socket.off("connection", () => {});
         // socket.off(SOCKET_ON_ACTIONS.ON_TYPING);

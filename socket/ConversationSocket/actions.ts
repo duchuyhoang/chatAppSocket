@@ -11,6 +11,7 @@ import { ConversationWithCreatorInfo } from "../../TS/Conversation";
 import { resetRoom } from "../../common/socket";
 import { IEmitMessage } from "../../models/Message";
 import { ConversationIsTyping } from "../../models/Conversation";
+import { UserInConversation } from "../../models/UserInConversation";
 
 type UserInRoom = {
   [id_user: string]: string[];
@@ -77,12 +78,22 @@ export const RoomSocketActions = {
           SOCKET_PREFIX.CONVERSATION + newConversation.id_room
         );
 
-        // Emit to all matched socket to join new room
+        // Emit to matched socket to join new room
         namespace
           .in(socket.id)
           .emit(SOCKET_EMIT_ACTIONS.JOIN_NEW_ROOM, newConversation);
       }
     });
+  },
+
+  emitNewUsersJoinRoom: (
+    namespace: Namespace,
+    listNewUser: UserInConversation[],
+    id_room: string
+  ) => {
+    namespace
+      .to(SOCKET_PREFIX.CONVERSATION + id_room.toString())
+      .emit(SOCKET_EMIT_ACTIONS.USERS_JOIN_ROOM, { listNewUser });
   },
 
   joinPrivateRoom: (
@@ -142,8 +153,7 @@ export const RoomSocketActions = {
 
     if (socket) {
       const { id_user, avatar, email, phone, name } = user;
-      socket
-      .broadcast
+      socket.broadcast
         .to(SOCKET_PREFIX.CONVERSATION + id_conversation.toString())
         .emit(SOCKET_EMIT_ACTIONS.EMIT_IS_TYPING, {
           id_user,
@@ -167,8 +177,7 @@ export const RoomSocketActions = {
   ) => {
     if (socket) {
       const { id_user, avatar, email, phone, name } = user;
-      socket
-      .broadcast
+      socket.broadcast
         .to(SOCKET_PREFIX.CONVERSATION + id_conversation.toString())
         .emit(SOCKET_EMIT_ACTIONS.EMIT_STOP_TYPING, {
           id_user,

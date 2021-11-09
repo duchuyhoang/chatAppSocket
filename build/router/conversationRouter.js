@@ -15,4 +15,5 @@ conversationRouter.post("/createPrivateChat", authenticate_1.verifyToken, upload
 conversationRouter.post("/checkPrivateMessage", authenticate_1.verifyToken, new ConversationController_1.ConversationController().checkPrivateConversationBetween);
 conversationRouter.get("/getConversations", authenticate_1.verifyToken, new ConversationController_1.ConversationController().getConversations);
 conversationRouter.get("/getSpecificConversation/:id_conversation", authenticate_1.verifyToken, roomMiddlewares_1.checkUserExist, new ConversationController_1.ConversationController().getConversationById);
+conversationRouter.post("/addUsersToConversation", authenticate_1.verifyToken, new ConversationController_1.ConversationController().addUsersToConversation);
 exports.default = conversationRouter;

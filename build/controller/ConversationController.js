@@ -28,6 +28,7 @@ class ConversationController {
             this.checkPrivateConversationBetween.bind(this);
         this.getConversations = this.getConversations.bind(this);
         this.getConversationById = this.getConversationById.bind(this);
+        this.addUsersToConversation = this.addUsersToConversation.bind(this);
     }
     checkPrivateConversationBetween(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -102,6 +103,15 @@ class ConversationController {
         if (conversationSocket) {
             actions_1.RoomSocketActions.handleRoomGroup(conversationSocket, listUser, newConversation);
         }
+    }
+    emitNewUsersJoin(req, listNewUser, id_room) {
+        try {
+            const conversationSocket = req.app.get(constants_1.SOCKET_LIST)[constants_1.SOCKET_NAMESPACE.CONVERSATION];
+            if (conversationSocket) {
+                actions_1.RoomSocketActions.emitNewUsersJoinRoom(conversationSocket, listNewUser, id_room);
+            }
+        }
+        catch (error) { }
     }
     createPrivateConversation(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -193,7 +203,6 @@ class ConversationController {
                 }
             }
             catch (error) {
-                console.log(error);
                 (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
             }
         });
@@ -204,6 +213,54 @@ class ConversationController {
             try {
                 const listConversations = yield this.conversationDao.getConversationByUser(userInfo.id_user.toString());
                 res.json({ data: listConversations });
+            }
+            catch (error) {
+                console.log(error);
+                (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
+            }
+        });
+    }
+    addUsersToConversation(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id_room, list_user } = req.body;
+            const userInfo = res.locals.decodeToken;
+            try {
+                const isValid = yield Conversation_1.ConversationAddUsersSchema.validate({
+                    id_room,
+                    list_user,
+                });
+            }
+            catch (error) {
+                (0, functions_1.throwValidateError)(error, next);
+                return;
+            }
+            try {
+                // const parseListUser: string[] = JSON.parse(list_user);
+                const parseListUser = list_user.map((id) => id.toString());
+                const listCurrentUserInRoom = yield (yield this.userInConversationDao.getAllConversationUser(id_room)).map((user) => user.id_user.toString());
+                // Filter list user
+                parseListUser.forEach((userId, index) => {
+                    if (listCurrentUserInRoom.indexOf(userId.toString()) !== -1)
+                        parseListUser.splice(index, 1);
+                });
+                const data = (0, functions_1.forBulkInsert)(parseListUser.map((id_user) => {
+                    return {
+                        id_user: id_user,
+                    };
+                }), id_room.toString());
+                yield this.userInConversationDao.addUsersToConversation(data);
+                const currentConversation = yield this.conversationDao.getConversationById(userInfo.id_user, id_room);
+                if (currentConversation) {
+                    const listUserInRoom = yield this.userInConversationDao.getAllConversationUser(id_room);
+                    const listNewUser = listUserInRoom.filter((user) => parseListUser.indexOf(user.id_user.toString()) !== -1);
+                    // Emit to all user in this room that someone join their room
+                    this.emitNewUsersJoin(req, listNewUser, id_room);
+                    this.emitJoinRoom(req, parseListUser, currentConversation);
+                }
+                res.json({
+                    message: "Success",
+                });
+                // listCurrentUserInRoom.forEach((userId))
             }
             catch (error) {
                 console.log(error);

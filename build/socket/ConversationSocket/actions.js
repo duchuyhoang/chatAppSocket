@@ -52,13 +52,18 @@ exports.RoomSocketActions = {
                 socket.join(constants_1.SOCKET_PREFIX.CONVERSATION + newConversation.id_room);
                 // update list user and their room
                 userInRoom[constants_1.SOCKET_PREFIX.USER + userInfo.id_user].push(constants_1.SOCKET_PREFIX.CONVERSATION + newConversation.id_room);
-                // Emit to all matched socket to join new room
+                // Emit to matched socket to join new room
                 namespace
                     .in(socket.id)
                     .emit(constants_1.SOCKET_EMIT_ACTIONS.JOIN_NEW_ROOM, newConversation);
             }
         });
     }),
+    emitNewUsersJoinRoom: (namespace, listNewUser, id_room) => {
+        namespace
+            .to(constants_1.SOCKET_PREFIX.CONVERSATION + id_room.toString())
+            .emit(constants_1.SOCKET_EMIT_ACTIONS.USERS_JOIN_ROOM, { listNewUser });
+    },
     joinPrivateRoom: (namespace, listUser, newConversation) => {
         namespace.sockets.forEach((socket) => {
             const userInfo = socket.data.decode;
@@ -92,8 +97,7 @@ exports.RoomSocketActions = {
         // console.log("socket",namespace.sockets);
         if (socket) {
             const { id_user, avatar, email, phone, name } = user;
-            socket
-                .broadcast
+            socket.broadcast
                 .to(constants_1.SOCKET_PREFIX.CONVERSATION + id_conversation.toString())
                 .emit(constants_1.SOCKET_EMIT_ACTIONS.EMIT_IS_TYPING, {
                 id_user,
@@ -112,8 +116,7 @@ exports.RoomSocketActions = {
     onStopTyping: (namespace, user, id_conversation, socket) => {
         if (socket) {
             const { id_user, avatar, email, phone, name } = user;
-            socket
-                .broadcast
+            socket.broadcast
                 .to(constants_1.SOCKET_PREFIX.CONVERSATION + id_conversation.toString())
                 .emit(constants_1.SOCKET_EMIT_ACTIONS.EMIT_STOP_TYPING, {
                 id_user,

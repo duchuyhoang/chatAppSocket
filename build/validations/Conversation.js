@@ -19,7 +19,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateConversationLastSeenMessageSchema = exports.ConversationCheckPrivateChatExistSchema = exports.ConversationCreatePrivateChatSchema = exports.ConversationCreateGroupChatSchema = void 0;
+exports.UpdateConversationLastSeenMessageSchema = exports.ConversationCheckPrivateChatExistSchema = exports.ConversationCreatePrivateChatSchema = exports.ConversationAddUsersSchema = exports.ConversationCreateGroupChatSchema = void 0;
 const yup = __importStar(require("yup"));
 exports.ConversationCreateGroupChatSchema = yup.object().shape({
     title: yup.string().required("Need title"),
@@ -37,14 +37,29 @@ exports.ConversationCreateGroupChatSchema = yup.object().shape({
         }
     }),
 });
+exports.ConversationAddUsersSchema = yup.object().shape({
+    id_room: yup.string().required("Need a room"),
+    list_user: yup
+        .array()
+        .required("Need list user")
+        .test("listUser", "List user wrong", (list_user) => {
+        try {
+            // const list = JSON.parse(list_user);
+            return Array.isArray(list_user) && (list_user === null || list_user === void 0 ? void 0 : list_user.length) > 0;
+        }
+        catch (error) {
+            return false;
+        }
+    }),
+});
 exports.ConversationCreatePrivateChatSchema = yup.object().shape({
-    id_friend: yup.string().required("Must include a friend")
+    id_friend: yup.string().required("Must include a friend"),
 });
 exports.ConversationCheckPrivateChatExistSchema = yup.object().shape({
-    id_friend: yup.string().required("Must include a friend")
+    id_friend: yup.string().required("Must include a friend"),
 });
 exports.UpdateConversationLastSeenMessageSchema = yup.object().shape({
     id_room: yup.string().required("Must include a room"),
-    id_message: yup.string().required("Must include a message")
+    id_message: yup.string().required("Must include a message"),
 });
 // expot const ConversationGetMessageSchema

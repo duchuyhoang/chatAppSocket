@@ -10,10 +10,24 @@ type CallConversationType = {
   [id_room: string]: string[];
 };
 
+type UserSocket = {
+  [id_user: string]: string;
+};
+
+const userSockets: UserSocket = {};
+
 export const CallSocket = (namespace: Namespace) => {
   namespace
     // .off("connection", () => {})
     .on("connection", (socket: Socket) => {
+      // userSockets;
+
+// socket.on("join chat",(data)=>{
+//   const {userInfo,id_conversation}=data;
+
+// })
+
+
       socket.on(
         SOCKET_ON_ACTIONS.ON_GET_LIST_USER_IN_ROOM,
         async ({ id_conversation }) => {
@@ -105,9 +119,6 @@ export const CallSocket = (namespace: Namespace) => {
 
         socket.emit("share to", { socketList });
 
-        
-        
-
         // namespace.to(SOCKET_PREFIX.CALL_CHAT + id_room).emit("someone share screen",{stream,socketId})
       });
 
@@ -121,7 +132,7 @@ export const CallSocket = (namespace: Namespace) => {
           mic,
           video,
           type,
-        }) => {    
+        }) => {
           namespace.to(receiverSocket).emit("user share screen", {
             peerId,
             callerSocketId,
@@ -133,7 +144,6 @@ export const CallSocket = (namespace: Namespace) => {
         }
       );
 
-
       socket.on(
         "accept share screen",
         ({ callerSocketId, socketId, peerId }) => {
@@ -143,12 +153,11 @@ export const CallSocket = (namespace: Namespace) => {
         }
       );
 
-
-socket.on("stop share",({socketId,id_room})=>{
-  socket.broadcast.to(SOCKET_PREFIX.CALL_CHAT+id_room).emit("user stop share",{socketId})
-})
-
-
+      socket.on("stop share", ({ socketId, id_room }) => {
+        socket.broadcast
+          .to(SOCKET_PREFIX.CALL_CHAT + id_room)
+          .emit("user stop share", { socketId });
+      });
 
       socket.on("disconnect", () => {
         // console.log("diss");

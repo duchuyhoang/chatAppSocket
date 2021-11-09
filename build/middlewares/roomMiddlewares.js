@@ -19,7 +19,6 @@ const checkUserExist = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
     try {
         const userInConversationDao = new UserInConversationDao_1.UserInConversationDao();
         const isUserExist = yield userInConversationDao.checkUserExistInConversation(userInfo.id_user.toString(), id_conversation || "");
-        console.log(isUserExist);
         if (isUserExist)
             next();
         else
