@@ -59,7 +59,7 @@ WHERE notification.id_receiver=? AND notification.id_notification=? LIMIT 1`,
     }
     answerFriendRequest(id_user, id_sender, id_notification, status) {
         return new Promise((resolve, reject) => {
-            this.db.query(`UPDATE notification SET status=? WHERE id_notification=? AND id_owner=? AND id_receiver=? AND status={${constants_1.NOTIFICATION_STATUS.PENDING}}`, [status, id_notification, id_sender, id_user], (err, result) => {
+            this.db.query(`UPDATE notification SET status=? WHERE id_notification=? AND id_owner=? AND id_receiver=? AND status=${constants_1.NOTIFICATION_STATUS.PENDING}`, [status, id_notification, id_sender, id_user], (err, result) => {
                 if (err)
                     reject(err);
                 else

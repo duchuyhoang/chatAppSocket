@@ -74,7 +74,7 @@ WHERE notification.id_receiver=? AND notification.id_notification=? LIMIT 1`,
   ) {
     return new Promise<OkPacket>((resolve, reject) => {
       this.db.query(
-        `UPDATE notification SET status=? WHERE id_notification=? AND id_owner=? AND id_receiver=? AND status={${NOTIFICATION_STATUS.PENDING}}`,
+        `UPDATE notification SET status=? WHERE id_notification=? AND id_owner=? AND id_receiver=? AND status=${NOTIFICATION_STATUS.PENDING}`,
         [status,id_notification,id_sender,id_user],
         (err, result) => {
           if (err) reject(err);
