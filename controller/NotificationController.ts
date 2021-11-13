@@ -18,6 +18,7 @@ import { OkPacket } from "mysql";
 import { NotificationSocketActions } from "../socket/NotificationSocket/actions";
 import { Namespace } from "socket.io";
 import { UserDao } from "../Dao/UserDao";
+import logger from "../common/logger";
 
 export class NotificationController {
   private notificationDao: NotificationDao;
@@ -194,6 +195,7 @@ export class NotificationController {
         );
       }
     } catch (err) {
+      console.log(err);      
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
   }
