@@ -104,7 +104,7 @@ export const RoomSocketActions = {
   ) => {
     namespace.sockets.forEach((socket: Socket) => {
       const userInfo: DecodedUser = socket.data.decode;
-      if (listUser.indexOf(userInfo.id_user.toString()) != 1) {
+      if (listUser.indexOf(userInfo.id_user.toString()) != -1) {
         // Join new room
         socket.join(SOCKET_PREFIX.CONVERSATION + newConversation.id_room);
         // update list user and their room
