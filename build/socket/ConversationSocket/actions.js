@@ -72,6 +72,9 @@ exports.RoomSocketActions = {
                 socket.join(constants_1.SOCKET_PREFIX.CONVERSATION + newConversation.id_room);
                 // update list user and their room
                 userInRoom[constants_1.SOCKET_PREFIX.USER + userInfo.id_user].push(constants_1.SOCKET_PREFIX.CONVERSATION + newConversation.id_room);
+                namespace
+                    .in(socket.id)
+                    .emit(constants_1.SOCKET_EMIT_ACTIONS.JOIN_NEW_ROOM, { newConversation });
             }
         });
     },

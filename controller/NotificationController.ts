@@ -1,8 +1,14 @@
 import { NextFunction, Response, Request } from "express";
 import { Notification } from "../models/Notification";
 import { NotificationDao } from "../Dao/NotificationDao";
+import { ConversationDao } from "../Dao/ConversationDao";
+
 import { CreateNotificationSchema } from "../validations/Notification";
-import { throwHttpError, throwValidateError } from "../common/functions";
+import {
+  forBulkInsert,
+  throwHttpError,
+  throwValidateError,
+} from "../common/functions";
 import {
   BAD_REQUEST,
   DB_ERROR,
@@ -19,13 +25,24 @@ import { NotificationSocketActions } from "../socket/NotificationSocket/actions"
 import { Namespace } from "socket.io";
 import { UserDao } from "../Dao/UserDao";
 import logger from "../common/logger";
+import { UserLastSeenMessageDao } from "../Dao/UserLastSeenMessageDao";
+import { UserInConversationDao } from "../Dao/UserInConversationDao";
+import { ConversationWithCreatorInfo } from "../TS/Conversation";
+import { RoomSocketActions } from "../socket/ConversationSocket/actions";
 
 export class NotificationController {
   private notificationDao: NotificationDao;
   private userDao: UserDao;
+  private conversationDao: ConversationDao;
+  private userLastSeenMessageDao: UserLastSeenMessageDao;
+  private userInConversationDao: UserInConversationDao;
+
   constructor() {
     this.notificationDao = new NotificationDao();
     this.userDao = new UserDao();
+    this.conversationDao = new ConversationDao();
+    this.userLastSeenMessageDao = new UserLastSeenMessageDao();
+    this.userInConversationDao = new UserInConversationDao();
 
     this.insertNewNotification = this.insertNewNotification.bind(this);
     this.getAllNotificationByUser = this.getAllNotificationByUser.bind(this);
@@ -122,6 +139,8 @@ export class NotificationController {
   ) {
     const userInfo: DecodedUser = res.locals.decodeToken;
     const { status, id_notification = "", id_sender = "" } = req.body;
+    let newConversation1: ConversationWithCreatorInfo | null = null;
+    let newConversation2: ConversationWithCreatorInfo | null = null;
 
     const notificationSocket: Namespace =
       req.app.get(SOCKET_LIST) &&
@@ -129,7 +148,7 @@ export class NotificationController {
     if (!notificationSocket) {
       throwHttpError("Something wrong", BAD_REQUEST, next);
     }
-    console.log(status);
+
     if (
       status.toString() !== NOTIFICATION_STATUS.FULFILLED.toString() &&
       status.toString() !== NOTIFICATION_STATUS.REJECT.toString()
@@ -150,12 +169,57 @@ export class NotificationController {
       }
 
       if (status.toString() === "1") {
-        console.log("hello");        
         await this.userDao.insertNewStatusBetween(
           userInfo.id_user.toString(),
           id_sender,
           status
         );
+        const { insertId: newIdRoom }: OkPacket =
+          await this.conversationDao.addNewPrivateConversation(
+            userInfo.id_user.toString()
+          );
+
+        const data = forBulkInsert<{ id_user: string }>(
+          [{ id_user: id_sender }, { id_user: userInfo.id_user.toString() }],
+          newIdRoom.toString()
+        );
+        await this.userInConversationDao.addUsersToConversation(data);
+
+        const listUserToConversation = [
+          ...[userInfo.id_user.toString(), id_sender].map((id) =>
+            this.userLastSeenMessageDao.addUserToRoom(newIdRoom.toString(), id)
+          ),
+        ];
+        await Promise.all([listUserToConversation]);
+
+        newConversation1 = await this.conversationDao.getConversationById(
+          userInfo.id_user,
+          newIdRoom.toString()
+        );
+        newConversation2 = await this.conversationDao.getConversationById(
+          id_sender,
+          newIdRoom.toString()
+        );
+
+        const conversationSocket: Namespace =
+          req.app.get(SOCKET_LIST)[SOCKET_NAMESPACE.CONVERSATION];
+
+        if (conversationSocket) {
+          if (newConversation1 && newConversation2) {
+            RoomSocketActions.joinPrivateRoom(
+              conversationSocket,
+              [userInfo.id_user.toString()],
+              newConversation1
+            );
+            RoomSocketActions.joinPrivateRoom(
+              conversationSocket,
+              [id_sender],
+              newConversation2
+            );
+          }
+        }
+
+        // await this.
       }
 
       const receiverInfo: IUserWithFriendshipStatus | null =
@@ -186,6 +250,8 @@ export class NotificationController {
             createAt: new Date().toISOString(),
             data: {
               user: senderInfo,
+              newConversation: newConversation2,
+              // newRoom:
             },
           }
         );
@@ -199,6 +265,7 @@ export class NotificationController {
             createAt: new Date().toISOString(),
             data: {
               user: receiverInfo,
+              newConversation: newConversation1,
             },
           }
         );

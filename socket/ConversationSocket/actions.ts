@@ -111,6 +111,10 @@ export const RoomSocketActions = {
         userInRoom[SOCKET_PREFIX.USER + userInfo.id_user].push(
           SOCKET_PREFIX.CONVERSATION + newConversation.id_room
         );
+        namespace
+        .in(socket.id)
+        .emit(SOCKET_EMIT_ACTIONS.JOIN_NEW_ROOM, { newConversation });
+
       }
     });
   },
