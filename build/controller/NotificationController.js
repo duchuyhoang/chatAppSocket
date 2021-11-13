@@ -105,6 +105,9 @@ class NotificationController {
                     res.status(constants_1.BAD_REQUEST).json({ message: "Something wrong" });
                     return;
                 }
+                if (status.toString() === "1") {
+                    yield this.userDao.insertNewStatusBetween(userInfo.id_user.toString(), id_sender, status);
+                }
                 const receiverInfo = yield this.userDao.getUserInfoById(userInfo.id_user.toString(), id_sender);
                 const senderInfo = yield this.userDao.getUserInfoById(id_sender, userInfo.id_user.toString());
                 if (!receiverInfo || !senderInfo) {

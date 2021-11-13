@@ -127,4 +127,20 @@ AND user_has_friend.id_friend=? AND status=${FRIEND_STATUS.FRIEND} AND delFlag=$
       );
     });
   }
+
+public insertNewStatusBetween(id_user:string,id_friend:string,status:FRIEND_STATUS){
+  return new Promise<any>((resolve, reject) => {
+    this.db.query(
+      `
+      INSERT INTO user_has_friend(id_user,id_friend,status) VALUES(?,?,?)
+     `,
+      [id_user,id_friend,status],
+      (err, result)=>{
+        if(err) reject(err);
+        else resolve(result[0]||null);
+      }
+    );
+  });
+}
+
 }

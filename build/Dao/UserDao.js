@@ -109,5 +109,17 @@ AND user_has_friend.id_friend=? AND status=${constants_1.FRIEND_STATUS.FRIEND} A
             });
         });
     }
+    insertNewStatusBetween(id_user, id_friend, status) {
+        return new Promise((resolve, reject) => {
+            this.db.query(`
+      INSERT INTO user_has_friend(id_user,id_friend,status) VALUES(?,?,?)
+     `, [id_user, id_friend, status], (err, result) => {
+                if (err)
+                    reject(err);
+                else
+                    resolve(result[0] || null);
+            });
+        });
+    }
 }
 exports.UserDao = UserDao;

@@ -149,6 +149,14 @@ export class NotificationController {
         return;
       }
 
+      if (status.toString() === "1") {
+        await this.userDao.insertNewStatusBetween(
+          userInfo.id_user.toString(),
+          id_sender,
+          status
+        );
+      }
+
       const receiverInfo: IUserWithFriendshipStatus | null =
         await this.userDao.getUserInfoById(
           userInfo.id_user.toString(),
@@ -195,7 +203,7 @@ export class NotificationController {
         );
       }
     } catch (err) {
-      console.log(err);      
+      console.log(err);
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
   }
@@ -215,7 +223,7 @@ export class NotificationController {
           id_owner: userInfo.id_user.toString(),
           message: message || "",
         });
-console.log("daadada");
+      console.log("daadada");
       NotificationSocketActions.emitNotification(
         notificationNamespace,
         SOCKET_PREFIX.NOTIFICATION + id_receiver,
@@ -229,8 +237,7 @@ console.log("daadada");
           },
         }
       );
-res.json({message:"Ok"});
-
+      res.json({ message: "Ok" });
     } catch (err) {
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
