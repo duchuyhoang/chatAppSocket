@@ -19,6 +19,7 @@ const HttpError_1 = require("./models/HttpError");
 const CustomValidationError_1 = require("./models/CustomValidationError");
 const logger_1 = __importDefault(require("./common/logger"));
 const constants_1 = require("./common/constants");
+let a = 1;
 // import { socketVerifyToken } from "./middlewares/authenticate";
 const socket_1 = require("./socket");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
