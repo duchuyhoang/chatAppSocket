@@ -95,6 +95,7 @@ class NotificationController {
             if (!notificationSocket) {
                 (0, functions_1.throwHttpError)("Something wrong", constants_1.BAD_REQUEST, next);
             }
+            console.log(status);
             if (status.toString() !== constants_1.NOTIFICATION_STATUS.FULFILLED.toString() &&
                 status.toString() !== constants_1.NOTIFICATION_STATUS.REJECT.toString()) {
                 res.status(constants_1.BAD_REQUEST).json({ message: "BAD REQUEST" });
@@ -106,6 +107,7 @@ class NotificationController {
                     return;
                 }
                 if (status.toString() === "1") {
+                    console.log("hello");
                     yield this.userDao.insertNewStatusBetween(userInfo.id_user.toString(), id_sender, status);
                 }
                 const receiverInfo = yield this.userDao.getUserInfoById(userInfo.id_user.toString(), id_sender);

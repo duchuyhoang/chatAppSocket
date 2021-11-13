@@ -129,7 +129,7 @@ export class NotificationController {
     if (!notificationSocket) {
       throwHttpError("Something wrong", BAD_REQUEST, next);
     }
-
+    console.log(status);
     if (
       status.toString() !== NOTIFICATION_STATUS.FULFILLED.toString() &&
       status.toString() !== NOTIFICATION_STATUS.REJECT.toString()
@@ -150,6 +150,7 @@ export class NotificationController {
       }
 
       if (status.toString() === "1") {
+        console.log("hello");        
         await this.userDao.insertNewStatusBetween(
           userInfo.id_user.toString(),
           id_sender,
