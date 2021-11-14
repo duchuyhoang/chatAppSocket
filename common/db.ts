@@ -83,7 +83,7 @@ const handleReconnect = (pool: Pool) => {
       console.log(err);      
       handleReconnect(mysql.createPool({ ...connectionConfig, ...rest }));
     } else {
-      // _connection = connection;
+      _connection = connection;
       console.log("Database established");
     }
   });

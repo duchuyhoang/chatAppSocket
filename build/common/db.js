@@ -91,7 +91,7 @@ const handleReconnect = (pool) => {
             handleReconnect(mysql_1.default.createPool(Object.assign(Object.assign({}, connectionConfig), rest)));
         }
         else {
-            // _connection = connection;
+            _connection = connection;
             console.log("Database established");
         }
     });
