@@ -1,23 +1,24 @@
 import axios from "axios";
 import mysql, { Connection, Pool } from "mysql";
 import { HOST_NAME } from "./constants";
-// var connection=mysql.createConnection({
-//   host:"171.241.46.90",
-//   // host:"localhost",
-//   user: "root",
-//   password: "huyhoang10032000@gmail.com",
-//   database: "chat_app",
-//   port: 3306,
-// });
-// connection.connect((err:mysql.MysqlError) => {
-//   if (err) {
-//     console.log("Server connect error");
-//     console.log(err);
-//   } else {
-//     console.log("Database established");
-//   }
-// });
+var connection=mysql.createConnection({
+  host:"171.241.46.90",
+  // host:"localhost",
+  user: "root",
+  password: "huyhoang10032000@gmail.com",
+  database: "chat_app",
+  port: 3306,
+});
+connection.connect((err:mysql.MysqlError) => {
+  if (err) {
+    console.log("Server connect error");
+    console.log(err);
+  } else {
+    console.log("Database established");
+  }
+});
 
+export default connection;
 // const options = {
 //   // responseType: 'text',
 //   headers: {
@@ -56,7 +57,7 @@ import { HOST_NAME } from "./constants";
 let _connection: any = null;
 
 let pool = mysql.createPool({
-  connectionLimit: 2,
+  connectionLimit: 1000,
   host: "171.241.46.90",
   // host:"localhost",
   user: "root",
@@ -75,20 +76,20 @@ let pool = mysql.createPool({
 //   }
 // });
 
-const handleReconnect = (pool: Pool) => {
-  pool.getConnection((err: mysql.MysqlError, connection: Connection) => {
-    if (err) {
-      const { connectionConfig, ...rest } = pool.config;
-      console.log("Server connect error");
-      console.log(err);      
-      handleReconnect(mysql.createPool({ ...connectionConfig, ...rest }));
-    } else {
-      _connection = connection;
-      console.log("Database established");
-    }
-  });
-};
+// const handleReconnect = (pool: Pool) => {
+//   pool.getConnection((err: mysql.MysqlError, connection: Connection) => {
+//     if (err) {
+//       const { connectionConfig, ...rest } = pool.config;
+//       console.log("Server connect error");
+//       console.log(err);      
+//       handleReconnect(mysql.createPool({ ...connectionConfig, ...rest }));
+//     } else {
+//       _connection = connection;
+//       console.log("Database established");
+//     }
+//   });
+// };
 
-handleReconnect(pool);
+// handleReconnect(pool);
 
-export default _connection;
+// export default _connection;

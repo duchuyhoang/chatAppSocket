@@ -1,36 +1,27 @@
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mysql_1 = __importDefault(require("mysql"));
-// var connection=mysql.createConnection({
-//   host:"171.241.46.90",
-//   // host:"localhost",
-//   user: "root",
-//   password: "huyhoang10032000@gmail.com",
-//   database: "chat_app",
-//   port: 3306,
-// });
-// connection.connect((err:mysql.MysqlError) => {
-//   if (err) {
-//     console.log("Server connect error");
-//     console.log(err);
-//   } else {
-//     console.log("Database established");
-//   }
-// });
+var connection = mysql_1.default.createConnection({
+    host: "171.241.46.90",
+    // host:"localhost",
+    user: "root",
+    password: "huyhoang10032000@gmail.com",
+    database: "chat_app",
+    port: 3306,
+});
+connection.connect((err) => {
+    if (err) {
+        console.log("Server connect error");
+        console.log(err);
+    }
+    else {
+        console.log("Database established");
+    }
+});
+exports.default = connection;
 // const options = {
 //   // responseType: 'text',
 //   headers: {
@@ -64,7 +55,7 @@ const mysql_1 = __importDefault(require("mysql"));
 // })
 let _connection = null;
 let pool = mysql_1.default.createPool({
-    connectionLimit: 2,
+    connectionLimit: 1000,
     host: "171.241.46.90",
     // host:"localhost",
     user: "root",
@@ -82,19 +73,18 @@ let pool = mysql_1.default.createPool({
 //     console.log("Database established");
 //   }
 // });
-const handleReconnect = (pool) => {
-    pool.getConnection((err, connection) => {
-        if (err) {
-            const _a = pool.config, { connectionConfig } = _a, rest = __rest(_a, ["connectionConfig"]);
-            console.log("Server connect error");
-            console.log(err);
-            handleReconnect(mysql_1.default.createPool(Object.assign(Object.assign({}, connectionConfig), rest)));
-        }
-        else {
-            _connection = connection;
-            console.log("Database established");
-        }
-    });
-};
-handleReconnect(pool);
-exports.default = _connection;
+// const handleReconnect = (pool: Pool) => {
+//   pool.getConnection((err: mysql.MysqlError, connection: Connection) => {
+//     if (err) {
+//       const { connectionConfig, ...rest } = pool.config;
+//       console.log("Server connect error");
+//       console.log(err);      
+//       handleReconnect(mysql.createPool({ ...connectionConfig, ...rest }));
+//     } else {
+//       _connection = connection;
+//       console.log("Database established");
+//     }
+//   });
+// };
+// handleReconnect(pool);
+// export default _connection;
