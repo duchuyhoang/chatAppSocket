@@ -1,15 +1,15 @@
 import axios from "axios";
 import mysql, { Connection, Pool } from "mysql";
 import { HOST_NAME } from "./constants";
-var connection=mysql.createConnection({
-  host:"171.241.46.90",
+var connection = mysql.createConnection({
+  host: "171.241.46.90",
   // host:"localhost",
   user: "root",
   password: "huyhoang10032000@gmail.com",
   database: "chat_app",
   port: 3306,
 });
-connection.connect((err:mysql.MysqlError) => {
+connection.connect((err: mysql.MysqlError) => {
   if (err) {
     console.log("Server connect error");
     console.log(err);
@@ -54,18 +54,7 @@ export default connection;
 //   });
 
 // })
-let _connection: any = null;
 
-let pool = mysql.createPool({
-  connectionLimit: 1000,
-  host: "171.241.46.90",
-  // host:"localhost",
-  user: "root",
-  password: "huyhoang10032000@gmail.com",
-  database: "chat_app",
-  port: 3306,
-  acquireTimeout: 1200000,
-});
 // pool.getConnection((err: mysql.MysqlError, connection: Connection) => {
 //   if (err) {
 //     console.log("Server connect error");
@@ -81,7 +70,7 @@ let pool = mysql.createPool({
 //     if (err) {
 //       const { connectionConfig, ...rest } = pool.config;
 //       console.log("Server connect error");
-//       console.log(err);      
+//       console.log(err);
 //       handleReconnect(mysql.createPool({ ...connectionConfig, ...rest }));
 //     } else {
 //       _connection = connection;
@@ -93,3 +82,16 @@ let pool = mysql.createPool({
 // handleReconnect(pool);
 
 // export default _connection;
+// let _connection:any = null;
+// let pool = mysql.createPool({
+//   connectionLimit: 1000,
+//   host: "171.241.46.90",
+//   // host:"localhost",
+//   user: "root",
+//   password: "huyhoang10032000@gmail.com",
+//   database: "chat_app",
+//   port: 3306,
+//   acquireTimeout: 1200000,
+// });
+
+// export default pool;

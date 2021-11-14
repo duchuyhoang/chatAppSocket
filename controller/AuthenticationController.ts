@@ -58,6 +58,7 @@ export class AuthenticationController {
         });
       }
     } catch (error) {
+      console.log(error);      
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
   }
