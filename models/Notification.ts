@@ -1,5 +1,6 @@
 import { Maybe } from "yup/lib/types";
 import {NOTIFICATION_STATUS, NOTIFICATION_TYPE} from "../common/constants";
+import { DecodedUser } from "./User";
 
 export interface Notification{
    id_notification:number,
@@ -18,6 +19,12 @@ export interface ISendNotification{
    createAt:string,
    data:any
 }
+
+export interface ICallVideoStartData{
+   idRoom:string|number,
+   callUser:DecodedUser
+}
+
 
 export interface INewFriendRequestNotification{
    id_owner:string,

@@ -12,6 +12,7 @@ import { resetRoom } from "../../common/socket";
 import { IEmitMessage } from "../../models/Message";
 import { ConversationIsTyping } from "../../models/Conversation";
 import { UserInConversation } from "../../models/UserInConversation";
+import { ICallVideoStartData } from "../../models/Notification";
 
 type UserInRoom = {
   [id_user: string]: string[];
@@ -68,17 +69,20 @@ export const RoomSocketActions = {
     listUser: string[],
     newConversation: ConversationWithCreatorInfo
   ) => {
-
     namespace.sockets.forEach((socket: Socket) => {
       const userInfo: DecodedUser = socket.data.decode;
-      if (listUser.map((id)=>id.toString()).indexOf(userInfo.id_user.toString()) != -1) {
+      if (
+        listUser
+          .map((id) => id.toString())
+          .indexOf(userInfo.id_user.toString()) != -1
+      ) {
         // Join new room
         socket.join(SOCKET_PREFIX.CONVERSATION + newConversation.id_room);
         // update list user and their room
         userInRoom[SOCKET_PREFIX.USER + userInfo.id_user].push(
           SOCKET_PREFIX.CONVERSATION + newConversation.id_room
         );
-               
+
         // Emit to matched socket to join new room
         namespace
           .in(socket.id)
@@ -112,9 +116,8 @@ export const RoomSocketActions = {
           SOCKET_PREFIX.CONVERSATION + newConversation.id_room
         );
         namespace
-        .in(socket.id)
-        .emit(SOCKET_EMIT_ACTIONS.JOIN_NEW_ROOM, { newConversation });
-
+          .in(socket.id)
+          .emit(SOCKET_EMIT_ACTIONS.JOIN_NEW_ROOM, { newConversation });
       }
     });
   },
@@ -203,6 +206,13 @@ export const RoomSocketActions = {
           name,
         });
     }
+  },
+
+  handleCallVideoStart(namespace: Namespace, socket: Socket) {
+    return (data: ICallVideoStartData) => {    
+      const { idRoom, callUser } = data;
+      namespace.in(SOCKET_PREFIX.CONVERSATION + idRoom).emit(SOCKET_EMIT_ACTIONS.EMIT_SOMEONE_CALL,{idRoom, callUser});
+    };
   },
 
   // joinRoom(namespace:Namespace,id_user:string,id_conversation:string){

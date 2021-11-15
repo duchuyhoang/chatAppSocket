@@ -38,6 +38,10 @@ const ConversationSocket = (namespace) => {
             const { id_conversation } = data;
             actions_1.RoomSocketActions.onStopTyping(namespace, socket.data.decode, id_conversation, socket);
         });
+        // Handle call
+        socket
+            .off(constants_1.SOCKET_ON_ACTIONS.ON_CALL_VIDEO_INFO, () => { })
+            .on(constants_1.SOCKET_ON_ACTIONS.ON_CALL_VIDEO_INFO, actions_1.RoomSocketActions.handleCallVideoStart(namespace, socket));
         socket.emit(constants_1.SOCKET_EMIT_ACTIONS.SOCKET_READY);
     }));
 };

@@ -12,6 +12,8 @@ export const NotificationSocket = (namespace: Namespace) => {
       NotificationSocketActions.onDisconnect(namespace, socket)
     );
 
+
+
     socket.off("disconnect",()=>{}).on("disconnect", () => {
       socket.removeAllListeners();
        //   socket.disconnect();
