@@ -23,10 +23,10 @@ class UserDao extends BaseDao_1.BaseDao {
         return new Promise((resolve, reject) => {
             const query = this.db.query(`
         SELECT selected.*,user_has_friend.status as friendStatus,check_can_make_friend_request(?,selected.id_user) as can_make_friend_request 
-        FROM (SELECT ${queryInfoString} FROM user WHERE (email LIKE CONCAT('%', ?,  '%') OR phone LIKE CONCAT('%', ?,  '%')) AND delFlag=${constants_1.DEL_FLAG.VALID} AND id_user!=?)
+        FROM (SELECT ${queryInfoString} FROM user WHERE (name LIKE CONCAT('%', ?,  '%') OR email LIKE CONCAT('%', ?,  '%') OR phone LIKE CONCAT('%', ?,  '%')) AND delFlag=${constants_1.DEL_FLAG.VALID} AND id_user!=?)
         as selected LEFT JOIN user_has_friend ON (selected.id_user=user_has_friend.id_user or selected.id_user=user_has_friend.id_friend) 
         AND(user_has_friend.id_user=? OR user_has_friend.id_friend=?) 
-        `, [id_user, keyword, keyword, id_user, id_user, id_user, id_user, id_user], (err, result) => {
+        `, [id_user, keyword, keyword, keyword, id_user, id_user, id_user, id_user, id_user], (err, result) => {
                 if (err)
                     reject(err);
                 else
