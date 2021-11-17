@@ -44,8 +44,10 @@ export class ConversationDao extends BaseDao {
         get_count_message(conversation.id_room) as message_count,get_last_message(conversation.id_room) as last_message,
         get_last_message_type(conversation.id_room) as last_message_type,
         get_next_user_name(conversation.id_room,?,conversation.type) as nextUserName,
+        get_next_user_avatar(conversation.id_room,?,conversation.type) as nextUserAvatar,
+        get_next_user_sex(conversation.id_room,?,conversation.type) as nextUserSex,
         (SELECT GROUP_CONCAT(user.avatar SEPARATOR "****")  
-        FROM user_in_conversation INNER JOIN user
+      FROM user_in_conversation INNER JOIN user
         ON user_in_conversation.id_user=user.id_user WHERE user_in_conversation.id_room=conversation.id_room
         GROUP BY conversation.id_room
         ) as listAvatar
@@ -53,7 +55,7 @@ export class ConversationDao extends BaseDao {
         INNER JOIN conversation ON user_in_conversation.id_room=conversation.id_room 
         LEFT JOIN user ON conversation.creator=user.id_user
         WHERE conversation.delFlag=${DEL_FLAG.VALID} AND user_in_conversation.id_user=?`,
-        [id_user,id_user],
+        [id_user, id_user, id_user, id_user],
         (err, result) => {
           if (err) reject(err);
           else {
@@ -64,7 +66,10 @@ export class ConversationDao extends BaseDao {
     });
   }
 
-  public getConversationById(id_user:string|number,id_conversation: string) {
+  public getConversationById(
+    id_user: string | number,
+    id_conversation: string
+  ) {
     return new Promise<ConversationWithCreatorInfo | null>(
       (resolve, reject) => {
         this.db.query(
@@ -75,6 +80,8 @@ get_count_message(conversation.id_room) as message_count,
 get_last_message(conversation.id_room) as last_message,
 get_last_message_type(conversation.id_room) as last_message_type,
 get_next_user_name(conversation.id_room,?,conversation.type) as nextUserName,
+get_next_user_avatar(conversation.id_room,?,conversation.type) as nextUserAvatar,
+get_next_user_sex(conversation.id_room,?,conversation.type) as nextUserSex,
 (SELECT GROUP_CONCAT(user.avatar SEPARATOR "****")  
         FROM user_in_conversation INNER JOIN user
         ON user_in_conversation.id_user=user.id_user WHERE user_in_conversation.id_room=conversation.id_room
@@ -83,11 +90,11 @@ get_next_user_name(conversation.id_room,?,conversation.type) as nextUserName,
 FROM conversation 
 INNER JOIN user ON conversation.creator=user.id_user
 WHERE conversation.delFlag=${DEL_FLAG.VALID} AND conversation.id_room=? LIMIT 1;`,
-          [id_user,id_conversation],
+          [id_user, id_user,id_user, id_conversation],
           (err, result) => {
             if (err) reject(err);
 
-            if (result.length === 0) resolve(null);
+            if (!result||result?.length === 0) resolve(null);
             else resolve(result[0]);
           }
         );

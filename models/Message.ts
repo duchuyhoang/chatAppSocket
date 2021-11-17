@@ -70,6 +70,7 @@ export const generateMessage = (data: ICreateMessage): IQueryMessage => {
     delFlag,
     userInfo,
     id_user,
+    type,
     ...rest
   } = data;
   const { id_user: id_User, ...userInfoRest } = userInfo;
@@ -94,14 +95,16 @@ export const generateMessage = (data: ICreateMessage): IQueryMessage => {
       icon_createAt,
       icon_category,
     },
+    _type:type,
     ...userInfoRest,
   };
 };
 
-export type IQueryMessage = Omit<Message, "createAt" | "delFlag"> & {
+export type IQueryMessage = Omit<Message, "createAt" | "delFlag"|"type"> & {
   message_create_at: string;
   message_del_flag: DEL_FLAG;
   icon: IQueryMessageIcon;
+  _type:MESSAGE_TYPE
 } & Omit<DecodedUser, "id_user">;
 
 export interface IInsertTextMessage {

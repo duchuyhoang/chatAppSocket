@@ -22,7 +22,8 @@ export interface ISendNotification{
 
 export interface ICallVideoStartData{
    idRoom:string|number,
-   callUser:DecodedUser
+   callUser:DecodedUser,
+   newIdRoom:string
 }
 
 

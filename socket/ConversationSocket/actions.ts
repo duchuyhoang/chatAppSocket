@@ -144,10 +144,10 @@ export const RoomSocketActions = {
     namespace: Namespace,
     id_conversation: string,
     data: IEmitMessage
-  ) => {
+  ) => {  
     namespace
       .in(SOCKET_PREFIX.CONVERSATION + id_conversation.toString())
-      .emit(SOCKET_EMIT_ACTIONS.EMIT_MESSAGE, data);
+      .emit(SOCKET_EMIT_ACTIONS.EMIT_MESSAGE, {messageData:data});
   },
 
   emitIsTyping: (
@@ -210,8 +210,8 @@ export const RoomSocketActions = {
 
   handleCallVideoStart(namespace: Namespace, socket: Socket) {
     return (data: ICallVideoStartData) => {    
-      const { idRoom, callUser } = data;
-      namespace.in(SOCKET_PREFIX.CONVERSATION + idRoom).emit(SOCKET_EMIT_ACTIONS.EMIT_SOMEONE_CALL,{idRoom, callUser});
+      const { idRoom, callUser,newIdRoom } = data;
+      namespace.in(SOCKET_PREFIX.CONVERSATION + idRoom).emit(SOCKET_EMIT_ACTIONS.EMIT_SOMEONE_CALL,{idRoom, callUser,newIdRoom});
     };
   },
 

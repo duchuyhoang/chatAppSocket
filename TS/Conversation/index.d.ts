@@ -21,5 +21,7 @@ export interface ConversationWithCreatorInfo extends Conversation{
     last_message_type:Maybe<number|string>,
     listAvatar:Maybe<string>,
     nextUserName:Maybe<string>,
-    message_count:int
+    nextUserAvatar:Maybe<string>,
+    nextUserSex:number,
+    message_count:number
 }

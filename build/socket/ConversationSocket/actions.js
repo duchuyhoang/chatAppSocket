@@ -95,7 +95,7 @@ exports.RoomSocketActions = {
     emitMessageToConversation: (namespace, id_conversation, data) => {
         namespace
             .in(constants_1.SOCKET_PREFIX.CONVERSATION + id_conversation.toString())
-            .emit(constants_1.SOCKET_EMIT_ACTIONS.EMIT_MESSAGE, data);
+            .emit(constants_1.SOCKET_EMIT_ACTIONS.EMIT_MESSAGE, { messageData: data });
     },
     emitIsTyping: (namespace, id_conversation, user, socket) => {
         // console.log(SOCKET_PREFIX.CONVERSATION + id_conversation.toString());
@@ -146,8 +146,8 @@ exports.RoomSocketActions = {
     },
     handleCallVideoStart(namespace, socket) {
         return (data) => {
-            const { idRoom, callUser } = data;
-            namespace.in(constants_1.SOCKET_PREFIX.CONVERSATION + idRoom).emit(constants_1.SOCKET_EMIT_ACTIONS.EMIT_SOMEONE_CALL, { idRoom, callUser });
+            const { idRoom, callUser, newIdRoom } = data;
+            namespace.in(constants_1.SOCKET_PREFIX.CONVERSATION + idRoom).emit(constants_1.SOCKET_EMIT_ACTIONS.EMIT_SOMEONE_CALL, { idRoom, callUser, newIdRoom });
         };
     },
     // joinRoom(namespace:Namespace,id_user:string,id_conversation:string){
