@@ -585,6 +585,7 @@ export class MessageController {
       listMessage = await this.messageDao.getMessageByConversation(
         id_conversation?.toString() || ""
       );
+console.log(listMessage.length);
 
       res.json({
         ...Pagination(

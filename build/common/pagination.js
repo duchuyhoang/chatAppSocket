@@ -24,7 +24,7 @@ const Pagination = (array, offset, limit) => {
     const data = array.slice(offset, offset + limit);
     return {
         data,
-        offset,
+        offset: offset > array.length ? array.length : offset,
         limit,
         total: array.length
     };

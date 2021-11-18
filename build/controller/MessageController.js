@@ -423,6 +423,7 @@ class MessageController {
                 //   listMessage = memoMessages;
                 // }
                 listMessage = yield this.messageDao.getMessageByConversation((id_conversation === null || id_conversation === void 0 ? void 0 : id_conversation.toString()) || "");
+                console.log(listMessage.length);
                 res.json(Object.assign({}, (0, pagination_1.Pagination)(listMessage, parseInt((offset === null || offset === void 0 ? void 0 : offset.toString()) || "0"), parseInt((limit === null || limit === void 0 ? void 0 : limit.toString()) || "1"))));
             }
             catch (err) {
