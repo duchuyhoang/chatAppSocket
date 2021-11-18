@@ -37,7 +37,6 @@ WHERE notification.id_receiver=? `,
         // AND notification.status=${NOTIFICATION_STATUS.PENDING}
         [id_user],
         (err, result) => {
-          console.log(err);
           if (err) reject(err);
           else resolve(result);
         }

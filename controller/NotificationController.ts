@@ -291,7 +291,6 @@ export class NotificationController {
           id_owner: userInfo.id_user.toString(),
           message: message || "",
         });
-      console.log("daadada");
       NotificationSocketActions.emitNotification(
         notificationNamespace,
         SOCKET_PREFIX.NOTIFICATION + id_receiver,

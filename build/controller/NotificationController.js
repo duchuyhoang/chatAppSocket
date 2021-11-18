@@ -179,7 +179,6 @@ class NotificationController {
                     id_owner: userInfo.id_user.toString(),
                     message: message || "",
                 });
-                console.log("daadada");
                 actions_1.NotificationSocketActions.emitNotification(notificationNamespace, constants_1.SOCKET_PREFIX.NOTIFICATION + id_receiver, {
                     id_owner: userInfo.id_user,
                     type: constants_1.NOTIFICATION_TYPE.FRIEND_REQUEST,

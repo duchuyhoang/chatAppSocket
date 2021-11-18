@@ -47,7 +47,6 @@ class UserController {
                 res.json({ result });
             }
             catch (err) {
-                console.log(err);
                 (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
             }
         });

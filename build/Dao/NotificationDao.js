@@ -30,7 +30,6 @@ LEFT JOIN user as receiverTable ON notification.id_receiver=receiverTable.id_use
 WHERE notification.id_receiver=? `, 
             // AND notification.status=${NOTIFICATION_STATUS.PENDING}
             [id_user], (err, result) => {
-                console.log(err);
                 if (err)
                     reject(err);
                 else

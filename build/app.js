@@ -95,7 +95,7 @@ io.sockets.on("connection", (socket) => {
             socket.emit(constants_1.SOCKET_EMIT_ACTIONS.AUTHEN_FAIL);
             socket.disconnect();
         }
-    }, 1500);
+    }, 1000);
 });
 app.use("/upload", uploadFileRouter_1.default);
 app.use("/authen", authenticate_1.default);

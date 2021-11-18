@@ -92,7 +92,6 @@ class ConversationController {
                 res.json({ newRoom: newConversation });
             }
             catch (error) {
-                console.log(error);
                 (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
                 return;
             }
@@ -215,7 +214,6 @@ class ConversationController {
                 res.json({ data: listConversations });
             }
             catch (error) {
-                console.log(error);
                 (0, functions_1.throwHttpError)(constants_1.DB_ERROR, constants_1.BAD_REQUEST, next);
             }
         });
@@ -243,7 +241,6 @@ class ConversationController {
                     if (listCurrentUserInRoom.indexOf(userId.toString()) !== -1)
                         parseListUser.splice(index, 1);
                 });
-                console.log("da", parseListUser);
                 const data = (0, functions_1.forBulkInsert)(parseListUser.map((id_user) => {
                     return {
                         id_user: id_user,

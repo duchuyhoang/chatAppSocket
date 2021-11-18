@@ -134,8 +134,7 @@ export class ConversationController {
       }
 
       res.json({ newRoom: newConversation });
-    } catch (error) {
-      console.log(error);      
+    } catch (error) {   
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
       return;
     }
@@ -341,7 +340,6 @@ export class ConversationController {
         );
       res.json({ data: listConversations });
     } catch (error) {
-      console.log(error);
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
   }
@@ -376,8 +374,6 @@ export class ConversationController {
         if (listCurrentUserInRoom.indexOf(userId.toString()) !== -1)
           parseListUser.splice(index, 1);
       });
-      console.log("da", parseListUser);
-
       const data = forBulkInsert<{ id_user: string }>(
         parseListUser.map((id_user: string) => {
           return {

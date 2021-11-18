@@ -60,7 +60,6 @@ export class UserController {
 
       res.json({ result });
     } catch (err) {
-      console.log(err);
       throwHttpError(DB_ERROR, BAD_REQUEST, next);
     }
   }
