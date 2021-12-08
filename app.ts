@@ -25,7 +25,7 @@ import {
   SOCKET_ON_ACTIONS,
   SOCKET_LIST,
 } from "./common/constants";
-let a=1;
+
 // import { socketVerifyToken } from "./middlewares/authenticate";
 import { socketManager,SocketWithoutAuthenticate } from "./socket";
 import jwt from "jsonwebtoken";
@@ -144,7 +144,7 @@ app.use(
         message: err.message,
       });
     } else if (err instanceof CustomValidationError) {
-      console.log(err);      
+      console.log(err);         
       res.status(err.status | INTERNAL_SERVER).json({
         message: err.message,
         errors: err,
@@ -158,6 +158,6 @@ app.use(
 );
 
 server.listen(process.env.PORT || 3001, () => {
-  console.log("Hello world");
+  console.log("Hello world",process.env.PORT);
 });
 // mysqldump --column-statistics=0 --routines -u root -p  chat_app > filename.sql
