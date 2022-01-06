@@ -2,7 +2,7 @@ import axios from "axios";
 import mysql, { Connection, Pool } from "mysql";
 import { HOST_NAME } from "./constants";
 var connection = mysql.createConnection({
-  host: "171.241.46.90",
+  host: "171.241.75.149",
   // host:"localhost",
   user: "root",
   password: "huyhoang10032000@gmail.com",
